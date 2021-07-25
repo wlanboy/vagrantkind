@@ -1,9 +1,11 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+PUBLIC_IP = "192.168.178.170"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/ubuntu2004"
-  config.vm.hostname = "kind"
+  config.vm.hostname = "kind" 
+  #config.vm.network :public_network, :dev => 'br0', :type => 'bridge', :ip => PUBLIC_IP
   config.vm.network "private_network", ip: "192.168.56.60"
   config.vm.disk :disk, size: "50GB", primary: true
 
