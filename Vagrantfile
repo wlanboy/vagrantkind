@@ -1,18 +1,29 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+PUBLIC_IP = "192.168.178.170"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/ubuntu2004"
   config.vm.hostname = "kind"
-  config.vm.network "private_network", ip: "192.168.56.60"
+  config.vm.network :public_network, :dev => 'br0', :type => 'bridge', :ip => PUBLIC_IP
+  #config.vm.network "private_network", ip: "192.168.56.70"
   config.vm.disk :disk, size: "50GB", primary: true
-
+  
    config.vm.provider "virtualbox" do |vb|
-     vb.gui = false # keep it in background without console window
-     vb.memory = "4098"
+     vb.gui = false 
+     vb.memory = "6024"
      vb.cpus = 4
      vb.name = "kind"
    end
+
+   config.vm.provider :libvirt do |domain|
+    domain.cpu_mode = 'host-passthrough'
+    domain.graphics_type = 'none'
+    domain.memory = 6024
+    domain.cpus = 4
+    domain.features = ['acpi', 'apic', 'pae' ]
+    domain.autostart = true
+  end
 
   config.vm.provision "shell", inline: <<-SHELL
 	set -e
@@ -24,6 +35,7 @@ Vagrant.configure("2") do |config|
   sudo apt-get update
 
   sudo apt-get install -y nano htop apt-transport-https ca-certificates curl gnupg2 software-properties-common lsb-release wget net-tools
+  sudo apt install openjdk-11-jdk-headless maven
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io
   sudo apt-get install -y kubelet kubeadm kubectl
 
