@@ -1,0 +1,19 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kindcluster
+networking:
+  ipFamily: ipv4
+  apiServerAddress: "192.168.178.170"
+  apiServerPort: 6443
+nodes:
+- role: control-plane
+- role: worker
+  extraMounts:
+  - hostPath: /data
+    containerPath: /data
+    readOnly: false
+    selinuxRelabel: false
+    propagation: HostToContainer
+#kind create cluster --config kindconfig.yaml
+#kubectl cluster-info --context kind-kindcluster
+#kubectl get pods --all-namespaces --context kind-kindcluster

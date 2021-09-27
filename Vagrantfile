@@ -4,9 +4,15 @@ PUBLIC_IP = "192.168.178.170"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/ubuntu2004"
+<<<<<<< HEAD
   config.vm.hostname = "kind"
   config.vm.network :public_network, :dev => 'br0', :type => 'bridge', :ip => PUBLIC_IP
   #config.vm.network "private_network", ip: "192.168.56.70"
+=======
+  config.vm.hostname = "kind" 
+  #config.vm.network :public_network, :dev => 'br0', :type => 'bridge', :ip => PUBLIC_IP
+  config.vm.network "private_network", ip: "192.168.56.60"
+>>>>>>> efb22bd61f6aa0f4dfe52954812cf51c38156618
   config.vm.disk :disk, size: "50GB", primary: true
   
    config.vm.provider "virtualbox" do |vb|
@@ -15,6 +21,15 @@ Vagrant.configure("2") do |config|
      vb.cpus = 4
      vb.name = "kind"
    end
+	
+   config.vm.provider :libvirt do |domain|
+    domain.cpu_mode = 'host-passthrough'
+    domain.graphics_type = 'none'
+    domain.memory = 6024
+    domain.cpus = 4
+    domain.features = ['acpi', 'apic', 'pae' ]
+    domain.autostart = true
+  end
 
    config.vm.provider :libvirt do |domain|
     domain.cpu_mode = 'host-passthrough'
