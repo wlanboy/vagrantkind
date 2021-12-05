@@ -15,6 +15,7 @@ vagrant machine installing docker, kubectrl and kind to run a simple dev kuberne
 * kind delete cluster
 * kind delete clusters kindcluster
 
+# example log for cluster creation
 ```
 vagrant@kind:~$ kind create cluster
 Creating cluster "kind" ...
@@ -29,6 +30,7 @@ You can now use your cluster with:
 
 kubectl cluster-info --context kind-kind
 ```
+
 # get basic cluster information
 * kubectl cluster-info --context kind-kind
 ```
