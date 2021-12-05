@@ -9,6 +9,11 @@ vagrant machine installing docker, kubectrl and kind to run a simple dev kuberne
 
 # create kind kubernetes cluster
 * kind create cluster
+* sh setup-kind.sh (with calico)
+
+# destroy kind kubernetes cluster
+* kind delete cluster
+* kind delete clusters kindcluster
 
 ```
 vagrant@kind:~$ kind create cluster
@@ -53,6 +58,8 @@ kube-system          kube-proxy-5gv5b                             1/1     Runnin
 kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          4m9s
 local-path-storage   local-path-provisioner-547f784dff-gbhsc      1/1     Running   0          4m
 ```
+# deploy echo service for testing
+* kubectl apply -f echo-pod-service.yml
 
 # start deployen Spring Boot based Service
 * see: https://github.com/wlanboy/virtualbox-kubernets/blob/main/deploy-a-service.md
