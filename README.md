@@ -9,7 +9,10 @@ vagrant machine installing docker, kubectrl and kind to run a simple dev kuberne
 
 # create kind kubernetes cluster
 * kind create cluster
-* sh setup-kind.sh (with calico)
+
+# create with configuration
+* sh setup-kind.sh
+* see: https://github.com/wlanboy/vagrantkind/blob/main/setup-kind.sh
 
 # destroy kind kubernetes cluster
 * kind delete cluster
