@@ -1,3 +1,8 @@
+# kind + calico + ngxin ingress
+see:
+* https://www.armbian.com/odroid-c2/#kernels-archive-all
+* https://docs.armbian.com/
+
 cat << EOF >> kindconfig.yml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -6,6 +11,8 @@ networking:
   ipFamily: ipv4
   apiServerAddress: "192.168.178.39"
   apiServerPort: 6443
+  podSubnet: "192.168.0.0/16"
+  disableDefaultCNI: true
 nodes:
 - role: control-plane
   kubeadmConfigPatches:
@@ -25,5 +32,15 @@ nodes:
 EOF
 
 kind create cluster --config kind-config.yml
+# Calico
+curl https://docs.projectcalico.org/manifests/calico.yaml -O
+kubectl apply -f calico.yaml
+kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
+# CoreDNS
+kubectl scale deployment --replicas 1 coredns --namespace kube-system
+# ingress
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 kubectl apply -f echo-pod-service.yml
+
+# Delete cluster
+#kind delete clusters kindcluster
