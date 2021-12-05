@@ -1,5 +1,5 @@
 # vagrantkind
-vagrant machine installing docker, kubectrl and kind to run a simple dev kubernetes cluster
+vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a simple local kubernetes cluster
 
 # create vm
 * vagrant up
