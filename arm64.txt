@@ -18,3 +18,75 @@ sudo mv ./kind /usr/bin
 
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf 
+
+cat << EOF >> kindconfig.yml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kindcluster
+networking:
+  ipFamily: ipv4
+  apiServerAddress: "192.168.178.39"
+  apiServerPort: 6443
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 9080
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 9443
+    protocol: TCP
+- role: worker
+EOF
+
+cat << EOF >> echoservice.yml
+kind: Pod
+apiVersion: v1
+metadata:
+  name: echo
+  labels:
+    app: echo
+spec:
+  containers:
+  - name: httpecho
+    image: hashicorp/http-echo:0.2.3
+    args:
+    - "-text=echo"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: echo-service
+spec:
+  selector:
+    app: echo
+  ports:
+  # Default port used by the image
+  - port: 5678
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: echo-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/echo"
+        backend:
+          service:
+            name: echo-service
+            port:
+              number: 5678
+---
+EOF
+
+kind create cluster --config kindconfig.yml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
