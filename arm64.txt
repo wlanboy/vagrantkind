@@ -40,6 +40,9 @@ kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
 kubectl scale deployment --replicas 1 coredns --namespace kube-system
 # ingress
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+kubectl get pods -n ingress-nginx
+
+# deploy echo service
 kubectl apply -f echo-pod-service.yml
 
 # Delete cluster
