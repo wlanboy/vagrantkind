@@ -9,4 +9,4 @@ sudo apt-get update
 
 sudo apt-get install -y nano htop apt-transport-https ca-certificates curl gnupg2 software-properties-common lsb-release wget net-tools
 #sudo apt install openjdk-11-jdk-headless maven
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io kubectl
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io 
