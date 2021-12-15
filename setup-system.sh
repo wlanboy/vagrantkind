@@ -1,5 +1,11 @@
 #!/bin/bash
 set -e
+
+#wget https://github.com/wlanboy/vagrantkind/raw/main/daemon.json
+#wget https://github.com/wlanboy/vagrantkind/raw/main/echo-pod-service.yml
+#wget https://github.com/wlanboy/vagrantkind/raw/main/istio-settings.yaml
+#wget https://github.com/wlanboy/vagrantkind/raw/main/kind-config.yaml
+
 sudo adduser vagrant docker
 
 sudo sysctl -w net.ipv4.ip_forward=1
