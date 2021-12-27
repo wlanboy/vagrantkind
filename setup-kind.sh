@@ -8,6 +8,14 @@ kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
 # CoreDNS
 kubectl scale deployment --replicas 1 coredns --namespace kube-system
 
+# metallb
+# kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/master/manifests/namespace.yaml
+# kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/master/manifests/metallb.yaml
+# kubectl get pods --all-namespaces --watch
+# docker network inspect -f '{{.IPAM.Config}}' kind
+# wget https://kind.sigs.k8s.io/examples/loadbalancer/metallb-configmap.yaml
+# kubectl apply -f metallb-configmap.yaml
+
 # Ingress
 # kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 
