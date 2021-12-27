@@ -7,7 +7,7 @@ metadata:
 spec:
   containers:
   - name: httpecho
-    image: hashicorp/http-echo:0.2.3
+    image: nginx:latest
     args:
     - "-text=echo"
 ---
@@ -20,7 +20,7 @@ spec:
     app: echo
   ports:
   # Default port used by the image
-  - port: 5678
+  - port: 80
   # type: ClusterIP
   # type: LoadBalancer
 ---
@@ -39,5 +39,5 @@ spec:
           service:
             name: echo-service
             port:
-              number: 5678
+              number: 80
 ---
