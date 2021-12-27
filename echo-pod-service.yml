@@ -27,6 +27,7 @@ kind: Ingress
 metadata:
   name: echo-ingress
 spec:
+  ingressClassName: nginx
   rules:
   - http:
       paths:
