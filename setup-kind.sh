@@ -13,7 +13,7 @@ kubectl scale deployment --replicas 1 coredns --namespace kube-system
 
 # Istio
 ./istioctl manifest apply --set profile=default
-./istioctl manifest generate --set profile=default | ./istioctl verify-install -f -
+./istioctl manifest generate --set profile=default | ./istioctl verify-install -f --skip-confirmation -
 kubectl patch service istio-ingressgateway -n istio-system --patch "$(cat istio-settings.yaml)"
 
 # Delete cluster
