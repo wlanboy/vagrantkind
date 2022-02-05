@@ -16,3 +16,5 @@ sudo cp /home/vagrant/daemon.json /etc/docker/daemon.json
 
 sudo swapoff -a
 sudo sed -i '/ swap / s/^/#/' /etc/fstab
+
+#sudo sh /home/vagrant/setup-kind.sh
