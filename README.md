@@ -1,6 +1,9 @@
 # vagrantkind
 vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a simple local kubernetes cluster
 
+# simple path without istio, but with calico and ingress
+* see: https://github.com/wlanboy/vagrantkind/blob/main/arm64-steps.md
+
 # create vm
 * vagrant up
 
