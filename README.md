@@ -10,13 +10,13 @@ vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a si
 # create kind kubernetes cluster
 * kind create cluster
 
-# create with config (calico + istio)
+# or create kind cluster with config for all services (calico + istio)
 * sh setup-kind.sh
 * see: https://github.com/wlanboy/vagrantkind/blob/main/setup-kind.sh
 
 # destroy kind kubernetes cluster
 * kind delete cluster
-* kind delete clusters kindcluster
+* or kind delete clusters kindcluster
 
 # example log for cluster creation
 ```
