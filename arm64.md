@@ -3,6 +3,8 @@ see:
 * https://www.armbian.com/odroid-c2/#kernels-archive-all
 * https://docs.armbian.com/
 
+# generate kind config
+```
 cat << EOF >> kindconfig.yml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -30,20 +32,37 @@ nodes:
     protocol: TCP
 - role: worker
 EOF
+```
 
+# create cluster
+```
 kind create cluster --config kind-config.yml
+```
+
 # Calico
+```
 curl https://docs.projectcalico.org/manifests/calico.yaml -O
 kubectl apply -f calico.yaml
 kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
+```
+
 # CoreDNS
+```
 kubectl scale deployment --replicas 1 coredns --namespace kube-system
+```
+
 # ingress
+```
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 kubectl get pods -n ingress-nginx
+```
 
 # deploy echo service
+```
 kubectl apply -f echo-pod-service.yml
+```
 
 # Delete cluster
-#kind delete clusters kindcluster
+```
+kind delete clusters kindcluster
+```
