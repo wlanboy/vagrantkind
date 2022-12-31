@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 PUBLIC_IP = "192.168.178.170"
-BOX_IMAGE = "generic/ubuntu2004"
+BOX_IMAGE = "generic/ubuntu2204"
 BOX_NAME = "kind"
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
