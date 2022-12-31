@@ -66,6 +66,9 @@ kube-system          kube-proxy-5gv5b                             1/1     Runnin
 kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          4m9s
 local-path-storage   local-path-provisioner-547f784dff-gbhsc      1/1     Running   0          4m
 ```
+# see shell scripts to install calico and istio
+- https://github.com/wlanboy/vagrantkind/blob/main/setup-kind.sh
+
 # deploy echo service for testing
 * kubectl apply -f echo-pod-service.yml
 
