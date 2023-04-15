@@ -10,7 +10,7 @@ wget https://get.helm.sh/helm-v3.10.1-linux-arm64.tar.gz
 tar -zxvf helm-v3.10.1-linux-arm64.tar.gz
 sudo cp linux-arm64/helm /usr/local/bin/helm
 
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-linux-arm64
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.18.0/kind-linux-arm64
 chmod +x ./kind
 sudo cp ./kind /usr/bin
 
