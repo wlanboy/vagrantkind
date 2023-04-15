@@ -5,7 +5,7 @@ see:
 
 # generate kind config
 ```
-cat << EOF >> kindconfig.yml
+cat << EOF >> kind-config.yml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: kindcluster
