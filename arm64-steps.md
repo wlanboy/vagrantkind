@@ -41,7 +41,7 @@ kind create cluster --config kind-config.yml
 
 # Calico
 ```
-curl https://docs.projectcalico.org/manifests/calico.yaml -O
+wget https://github.com/projectcalico/calico/raw/master/manifests/calico.yaml
 kubectl apply -f calico.yaml
 kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
 ```
