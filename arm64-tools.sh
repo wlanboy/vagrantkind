@@ -16,4 +16,4 @@ sudo cp ./kind /usr/bin
 
 wget https://github.com/istio/istio/releases/download/1.17.2/istio-1.17.2-linux-arm64.tar.gz
 tar -zxvf istio-1.17.2-linux-arm64.tar.gz
-cp istio-1.15.2/bin/istioctl ~
+cp istio-1.17.2/bin/istioctl ~
