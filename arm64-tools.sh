@@ -14,6 +14,6 @@ curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.18.0/kind-linux-arm64
 chmod +x ./kind
 sudo cp ./kind /usr/bin
 
-wget https://github.com/istio/istio/releases/download/1.15.2/istio-1.15.2-linux-arm64.tar.gz
-tar -zxvf istio-1.15.2-linux-arm64.tar.gz
+wget https://github.com/istio/istio/releases/download/1.17.2/istio-1.17.2-linux-arm64.tar.gz
+tar -zxvf istio-1.17.2-linux-arm64.tar.gz
 cp istio-1.15.2/bin/istioctl ~
