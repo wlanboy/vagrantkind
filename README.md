@@ -74,3 +74,6 @@ local-path-storage   local-path-provisioner-547f784dff-gbhsc      1/1     Runnin
 
 # start deployen Spring Boot based Service
 * see: https://github.com/wlanboy/virtualbox-kubernets/blob/main/deploy-a-service.md
+
+# Delete cluster
+* kind delete clusters kindcluster
