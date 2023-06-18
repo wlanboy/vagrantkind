@@ -24,11 +24,11 @@ spec:
         app: echo-app
     spec:
       containers:
+      - name: echo
         image: nginx:latest
         imagePullPolicy: IfNotPresent
         args:
-        - "-text=echo"        
-        name: echo
+        - "-text=echo"
         ports:
         - containerPort: 80
           protocol: TCP
