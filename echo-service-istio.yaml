@@ -39,6 +39,18 @@ spec:
       securityContext: {}
       terminationGracePeriodSeconds: 30
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: echo-service
+  namespace: demo
+spec:
+  selector:
+    app: echo-app
+  ports:
+  - port: 80
+  type: LoadBalancer
+---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
