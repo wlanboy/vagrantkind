@@ -10,7 +10,7 @@ kubectl create -f tigera-operator.yaml
 curl https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/custom-resources.yaml -O
 kubectl create -f custom-resources.yaml
 
-kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
+#kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true
 # CoreDNS
 kubectl scale deployment --replicas 1 coredns --namespace kube-system
 
@@ -34,7 +34,7 @@ kubectl create namespace istio-ingress
 helm install istio-ingress istio/gateway -n istio-ingress --wait
 helm install istio-ingressgateway istio/gateway -n istio-ingress
 
-kubectl patch service istio-ingressgateway -n istio-ingress --patch "$(cat istio-settings.yaml)"
+#kubectl patch service istio-ingressgateway -n istio-ingress --patch "$(cat istio-settings.yaml)"
 
 # Demoservice
 kubectl create namespace demo
