@@ -30,17 +30,17 @@ spec:
                     - name: status-port
                       port: 15021
                       targetPort: 15021
-                      nodePort: 10002
+                      nodePort: 30002
                       protocol: TCP
                     - name: http2
                       port: 80
                       targetPort: 8080
-                      nodePort: 10000
+                      nodePort: 30000
                       protocol: TCP
                     - name: https
                       port: 443
                       targetPort: 8443
-                      nodePort: 10001
+                      nodePort: 30001
                       protocol: TCP
             - apiVersion: policy/v1beta1
               kind: PodDisruptionBudget
