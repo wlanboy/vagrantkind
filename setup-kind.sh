@@ -36,5 +36,10 @@ helm install istio-ingressgateway istio/gateway -n istio-ingress
 
 kubectl patch service istio-ingressgateway -n istio-ingress --patch "$(cat istio-settings.yaml)"
 
+# Demoservice
+kubectl create namespace demo
+kubectl label namespace demo istio-injection=enabled
+kubectl apply -f echo-service-istio.yaml
+
 # Delete cluster
 #kind delete clusters k3s
