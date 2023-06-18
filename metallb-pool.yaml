@@ -6,4 +6,5 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.100.10-192.168.100.250
+  - 172.18.250.10-172.18.250.250
+# docker network inspect -f '{{.IPAM.Config}}' kind
