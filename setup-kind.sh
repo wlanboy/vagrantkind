@@ -34,5 +34,7 @@ kubectl create namespace istio-ingress
 helm install istio-ingress istio/gateway -n istio-ingress --wait
 helm install istio-ingressgateway istio/gateway -n istio-ingress
 
+kubectl patch service istio-ingressgateway -n istio-ingress --patch "$(cat istio-settings.yaml)"
+
 # Delete cluster
 #kind delete clusters k3s
