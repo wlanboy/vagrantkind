@@ -18,15 +18,10 @@ kubectl scale deployment --replicas 1 coredns --namespace kube-system
 # curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml -O
 # kubectl apply -f deploy.yaml
 
-# metallb
-#kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.9/config/manifests/metallb-native.yaml
-#kubectl apply -f metallb-pool.yaml
-#kubectl apply -f metallb-adv.yaml
-
-# Istio
-#./istioctl manifest apply --set profile=default
-#./istioctl manifest generate --set profile=default | ./istioctl verify-install -f --skip-confirmation -
-#kubectl patch service istio-ingressgateway -n istio-system --patch "$(cat istio-settings.yaml)"
+# Metallb
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.9/config/manifests/metallb-native.yaml
+kubectl apply -f metallb-pool.yaml
+kubectl apply -f metallb-adv.yaml
 
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 helm repo update
@@ -40,4 +35,4 @@ helm install istio-ingress istio/gateway -n istio-ingress --wait
 helm install istio-ingressgateway istio/gateway -n istio-ingress
 
 # Delete cluster
-#kind delete clusters kindcluster
+#kind delete clusters k3s
