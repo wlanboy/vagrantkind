@@ -12,7 +12,7 @@ sudo cp linux-amd64/helm /usr/local/bin/helm
 
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64
 chmod +x ./kind
-sudo mv ./kind /usr/bin
+sudo mv ./kind /usr/local/bin
 
 wget https://github.com/istio/istio/releases/download/1.17.2/istio-1.17.2-linux-amd64.tar.gz
 tar -zxvf istio-1.17.2-linux-amd64.tar.gz
