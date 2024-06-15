@@ -10,7 +10,7 @@ cd /home/vagrant && wget https://get.helm.sh/helm-v3.11.3-linux-amd64.tar.gz
 tar -zxvf helm-v3.11.3-linux-amd64.tar.gz
 sudo cp linux-amd64/helm /usr/local/bin/helm
 
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.18.0/kind-linux-amd64
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64
 chmod +x ./kind
 sudo mv ./kind /usr/bin
 
