@@ -1,0 +1,87 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb-statefullset
+spec:
+  serviceName: "mariadb-service"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      initContainers:
+      - name: init-mariadb
+        image: mariadb
+        imagePullPolicy: Always
+        command:
+        - bash
+        - "-c"
+        - |
+          set -ex
+          echo 'Starting init of mariadb';
+          ls /mnt/config-map
+          [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
+          ordinal=${BASH_REMATCH[1]}
+          if [[ $ordinal -eq 0 ]]; then
+            cp /mnt/config-map/primary.cnf /etc/mysql/conf.d/server-id.cnf
+            cp /mnt/config-map/primary.sql /docker-entrypoint-initdb.d
+          else
+            cp /mnt/config-map/replica.cnf /etc/mysql/conf.d/server-id.cnf
+            cp /mnt/config-map/secondary.sql /docker-entrypoint-initdb.d
+          fi
+          echo server-id=$((3000 + $ordinal)) >> etc/mysql/conf.d/server-id.cnf
+          ls /etc/mysql/conf.d/
+          cat /etc/mysql/conf.d/server-id.cnf
+        volumeMounts:
+          - name: mariadb-config-map
+            mountPath: /mnt/config-map
+          - name: mariadb-config
+            mountPath: /etc/mysql/conf.d/
+          - name: initdb
+            mountPath: /docker-entrypoint-initdb.d
+      restartPolicy: Always
+      containers:
+      - name: mariadb
+        image: mariadb:11.4
+        ports:
+        - containerPort: 3306
+          name: mariadb-port
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: mariadb-root-password
+        - name: MYSQL_INITDB_SKIP_TZINFO
+          value: "1"
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/lib/mysql/
+        - name: mariadb-config
+          mountPath: /etc/mysql/conf.d/
+        - name: initdb
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: mariadb-config-map
+        configMap:
+          name: mariadb-configmap
+      - name: mariadb-config
+        emptyDir: {}
+      - name: initdb
+        emptyDir: {}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Delete
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 500M
