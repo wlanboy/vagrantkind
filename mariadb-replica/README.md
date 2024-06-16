@@ -96,8 +96,9 @@ MariaDB [(none)]> show databases;
 ## delete everything
 ```
 kubectl delete service mariadb-service -n database-statefull
-kubectl delete statefullset github/vagrantkind/mariadb-replica/statefullset.yaml -n database-statefull
+kubectl delete sts mariadb-statefullset -n database-statefull
 kubectl delete configmap mariadb-configmap -n database-statefull
 kubectl delete secret mariadb-secret -n database-statefull
 kubectl get all -n database-statefull
+kubectl delete namespace database-statefull
 ```

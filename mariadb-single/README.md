@@ -58,4 +58,5 @@ kubectl delete secret mariadb-user -n database
 kubectl delete persistentvolumeclaim mariadb-pvc -n database
 kubectl delete persistentvolume mariadb-pv -n database
 kubectl get all -n database
+kubectl delete namespace database
 ```
