@@ -4,6 +4,11 @@ vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a si
 # simple path without istio, but with calico and ingress
 * see: https://github.com/wlanboy/vagrantkind/blob/main/arm64-steps.md
 
+# gists for WSL
+* https://gist.github.com/wlanboy/984d9d4785f3698aff7b38538f4d8e29
+* https://gist.github.com/wlanboy/154123f2a793477a0a4f96734babe49c
+* https://gist.github.com/wlanboy/d831507dfd472947f2781254d0dba487
+
 # create vm
 * vagrant up
 
