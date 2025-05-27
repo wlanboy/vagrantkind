@@ -41,5 +41,8 @@ kubectl create namespace demo
 kubectl label namespace demo istio-injection=enabled
 kubectl apply -f echo-service-istio.yaml
 
+# test
+#curl -H "Host: demo.com" http://172.18.250.10/
+
 # Delete cluster
 #kind delete clusters k3s
