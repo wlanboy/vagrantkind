@@ -19,7 +19,7 @@ kubectl scale deployment --replicas 1 coredns --namespace kube-system
 # kubectl apply -f deploy.yaml
 
 # Metallb
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.9/config/manifests/metallb-native.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml
 kubectl apply -f metallb-pool.yaml
 kubectl apply -f metallb-adv.yaml
 
