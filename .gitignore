@@ -1,1 +1,3 @@
 .vagrant/
+tigera-operator.yaml
+custom-resources.yaml
