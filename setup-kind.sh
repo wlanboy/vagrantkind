@@ -11,17 +11,17 @@ CALICO_OPERATOR_URL="https://raw.githubusercontent.com/projectcalico/calico/v${C
 CALICO_CR_URL="https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/custom-resources.yaml"
 
 echo "Downloading Calico operator manifest..."
-curl "${CALICO_OPERATOR_URL}" -O tigera-operator.yaml
+curl "${CALICO_OPERATOR_URL}" -o tigera-operator.yaml
 kubectl create -f tigera-operator.yaml
 echo "Waiting for Calico operator to be ready ..."
-kubectl wait --for=condition=Available deployment/calico-tigera-operator -n calico-operator --timeout=30s
+kubectl wait --for=condition=Available deployment/tigera-operator -n tigera-operator --timeout=30s
 
 echo "Downloading Calico custom resources manifest..."
-curl "${CALICO_CR_URL}" -O custom-resources.yaml
+curl "${CALICO_CR_URL}" -o custom-resources.yaml
 kubectl create -f custom-resources.yaml
 echo "Waiting for Calico node and controllers to be ready ..."
-kubectl wait --for=condition=Available deployment/calico-kube-controllers -n kube-system --timeout=30s
-kubectl wait --for=condition=Available daemonset/calico-node -n kube-system --timeout=30s
+kubectl wait --for=condition=Available deployment/calico-kube-controllers -n calico-system --timeout=30s
+kubectl wait --for=condition=Available daemonset/calico-node -n calico-system --timeout=30s
 echo "Calico CNI installed and ready."
 
 # Optional: Uncomment the following line if you encounter specific networking issues with Calico.
