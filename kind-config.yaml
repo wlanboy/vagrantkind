@@ -16,6 +16,17 @@ nodes:
     nodeRegistration:
       kubeletExtraArgs:
         node-labels: "ingress-ready=true"
+  kubeadmConfigPatchesJSON6902:
+  - group: kubeadm.k8s.io
+    version: v1beta3
+    kind: ClusterConfiguration
+    patch: |
+      - op: add
+        path: /apiServer/certSANs/-
+        value: 192.168.178.170   
+      - op: add
+        path: /apiServer/certSANs/-
+        value: 127.0.0.1
   extraPortMappings:
   - containerPort: 80
     hostPort: 9080
