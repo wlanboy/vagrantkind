@@ -1,0 +1,86 @@
+# otel-collector-deployment.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: istio-system # Deploy in istio-system for easier access from proxies
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    processors:
+      batch:
+      attributes:
+        actions:
+          # Add Kubernetes labels as Loki labels for better queryability
+          - action: insert
+            key: loki.attribute.labels
+            value: pod,namespace,app,version,service.name,cluster # Common K8s and OTel attributes
+    exporters:
+      otlphttp/loki:
+        endpoint: http://loki.istio-system.svc.cluster.local:3100/otlp/v1/logs # Loki's OTLP HTTP endpoint
+        tls:
+          insecure: true # Use insecure for simplicity in samples, use proper certs in production
+    service:
+      pipelines:
+        logs:
+          receivers: [otlp]
+          processors: [batch, attributes]
+          exporters: [otlphttp/loki]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: istio-system
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+      annotations:
+        sidecar.istio.io/inject: "false" # IMPORTANT: Do not inject Istio sidecar into OTel collector
+    spec:
+      containers:
+      - name: otel-collector
+        image: otel/opentelemetry-collector-contrib:latest
+        command: ["--config=/conf/otel-collector-config.yaml"]
+        ports:
+        - containerPort: 4317 # OTLP gRPC
+        - containerPort: 4318 # OTLP HTTP
+        volumeMounts:
+        - name: otel-collector-config-volume
+          mountPath: /conf
+      volumes:
+      - name: otel-collector-config-volume
+        configMap:
+          name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: istio-system
+spec:
+  selector:
+    app: otel-collector
+  ports:
+  - name: otlp-grpc
+    protocol: TCP
+    port: 4317
+    targetPort: 4317
+  - name: otlp-http
+    protocol: TCP
+    port: 4318
+    targetPort: 4318
+  type: ClusterIP
+

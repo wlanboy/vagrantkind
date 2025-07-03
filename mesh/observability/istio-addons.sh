@@ -12,3 +12,6 @@ kubectl apply -f $SAMSPLES_FOLDER/loki.yaml
 kubectl get all -A
 kubectl apply -f gateway-monitoring.yaml
 kubectl apply -f virtual-service-monitoring.yaml
+
+kubectl apply -f otel-collector-deployment.yaml
+kubectl apply -f istio-telemetry-otel.yaml
