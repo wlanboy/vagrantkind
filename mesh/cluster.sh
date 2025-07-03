@@ -39,6 +39,8 @@ echo "Installiere MetalLB Native vom Manifest: ${METALLB_MANIFEST_URL}..."
 kubectl apply -f "${METALLB_MANIFEST_URL}"
 echo "   MetalLB-Manifest angewendet."
 
+kubectl -n metallb-system wait --for=condition=Ready --all pods --timeout 30s
+
 echo "Erstelle die MetalLB-Konfiguration mit dem ermittelten IP-Bereich..."
 cat <<EOF > "${METALLB_CONFIG_FILE}"
 apiVersion: metallb.io/v1beta1
