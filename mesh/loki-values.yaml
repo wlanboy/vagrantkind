@@ -1,0 +1,28 @@
+promtail:
+  config:
+    snippets:
+      extraRelabelConfigs:
+        # Relabeling für Istio Envoy Proxy Access Logs
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          regex: "istio-proxy"
+          target_label: __kubernetes_container_name
+          replacement: "istio-proxy-access-logs"
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod_name
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          target_label: app
+        - source_labels: [__meta_kubernetes_pod_label_version]
+          target_label: version
+        - source_labels: [__meta_kubernetes_service_name]
+          target_label: service_name
+        # Relabeling für Istio Control Plane Logs (istiod)
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          regex: "discovery" # Der Containername für istiod ist "discovery"
+          target_label: container_name
+          replacement: "istiod"
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod_name
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
