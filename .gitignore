@@ -1,3 +1,4 @@
 .vagrant/
 tigera-operator.yaml
 custom-resources.yaml
+mesh/cluster.yaml
