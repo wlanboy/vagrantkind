@@ -28,3 +28,10 @@ echo "Um die erstellten Ressourcen zu entfernen, führen Sie die folgenden Befeh
 echo "helm delete otel-collector -n otel"
 echo "helm delete loki -n loki"
 echo "rm otel-collector-config.yaml"
+
+echo "Install otel services for istio"
+kubectl apply -f otel-services.yaml
+
+echo "Set otel provider for Istio Mesh"
+kubectl apply -f observability/istio-telemetry-otel.yaml
+
