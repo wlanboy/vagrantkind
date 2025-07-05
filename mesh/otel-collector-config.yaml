@@ -1,0 +1,75 @@
+mode: daemonset
+
+image:
+  repository: "otel/opentelemetry-collector-contrib"
+
+config:
+  receivers:
+    filelog:
+      # Sammelt Logs von allen Pods auf dem Knoten.
+      # Der Pfad entspricht dem Standard-Log-Verzeichnis von containerd/CRI-O.
+      include: [ /var/log/pods/*/*/*.log ]
+      start_at: beginning
+      include_file_path: true
+      include_file_name: false
+      operators:
+        # Parser für das Standard-JSON-Format der Container-Laufzeitumgebung
+        - type: json_parser
+          timestamp:
+            parse_from: attributes.time
+            layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+          severity:
+            parse_from: attributes.stream
+            mapping:
+              stdout: info
+              stderr: error
+
+  processors:
+    # k8sattributes reichert die Logs mit Metadaten aus Kubernetes an (z.B. Pod-Labels).
+    k8sattributes:
+      auth_type: "serviceAccount"
+      passthrough: false
+      filter:
+        node_from_env_var: KUBE_NODE_NAME
+      extract:
+        metadata:
+          - k8s.namespace.name
+          - k8s.pod.name
+          - k8s.container.name
+        # Extrahiert alle Pod-Labels, die wir später zum Filtern verwenden.
+        labels:
+          - from: pod
+            key_regex: '.*'
+
+    # Dieser Filter-Prozessor wählt gezielt die Logs von Istio-Komponenten aus.
+    filter:
+      logs:
+        # Wir verwenden die OpenTelemetry Transformation Language (OTTL),
+        # um die von k8sattributes hinzugefügten Attribute zu prüfen.
+        # Ein Log wird beibehalten, wenn:
+        # - das Pod-Label 'app' den Wert 'istiod' hat (Istio Control Plane) ODER
+        # - der Container-Name 'istio-proxy' ist (Istio Sidecar).
+        ottl_conditions:
+          - 'attributes["k8s.pod.labels.app"] == "istiod"'
+          - 'attributes["k8s.container.name"] == "istio-proxy"'
+
+    # batch fasst Logs zusammen, um sie effizienter zu exportieren.
+    batch:
+
+  exporters:
+    loki:
+      # Der Endpunkt des zuvor installierten Loki-Service.
+      endpoint: "http://loki-gateway.loki.svc.cluster.local:3100/loki/api/v1/push"
+      # Diese Attribute werden in Loki-Labels umgewandelt und ermöglichen das Filtern in Grafana/Loki.
+      labels:
+        resource:
+          k8s.namespace.name: "namespace"
+          k8s.pod.name: "pod"
+          k8s.container.name: "container"
+
+  service:
+    pipelines:
+      logs:
+        receivers: [filelog]
+        processors: [k8sattributes, filter, batch]
+        exporters: [loki]
