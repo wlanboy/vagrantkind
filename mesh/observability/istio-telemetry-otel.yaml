@@ -1,11 +1,23 @@
-# istio-telemetry-otel.yaml
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istiocontrolplane
+  namespace: istio-system
+spec:
+  meshConfig:
+    extensionProviders:
+      - name: mesh-default-access-log-to-otel
+        envoyOtelAls:
+          service: otel-collector.istio-system.svc.cluster.local
+          port: 4317
+---
 apiVersion: telemetry.istio.io/v1
 kind: Telemetry
 metadata:
   name: mesh-default-access-log-to-otel
-  namespace: istio-system # Apply in istio-system for mesh-wide effect
+  namespace: istio-system
 spec:
   # No selector means it applies mesh-wide
   accessLogging:
     - providers:
-      - name: otel # This refers to the OpenTelemetry provider
+      - name: mesh-default-access-log-to-otel
