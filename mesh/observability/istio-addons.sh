@@ -9,7 +9,7 @@ kubectl apply -f $SAMSPLES_FOLDER/jaeger.yaml
 kubectl apply -f $SAMSPLES_FOLDER/kiali.yaml
 #kubectl apply -f $SAMSPLES_FOLDER/loki.yaml
 
-kubectl get all -A
+#kubectl get all -A
 kubectl apply -f gateway-monitoring.yaml
 kubectl apply -f virtual-service-monitoring.yaml
 
@@ -24,7 +24,7 @@ kubectl get secret grafana-admin-credentials -n istio-system -o jsonpath='{.data
 #kubectl apply -f istio-telemetry-otel.yaml
 
 helm upgrade --install loki grafana/loki-distributed -n grafana-loki --create-namespace
-helm show values grafana/promtail > promtail-overrides.yaml
+#helm show values grafana/promtail > promtail-overrides.yaml
 #- url: http://loki-loki-distributed-gateway.grafana-loki.svc.cluster.local/loki/api/v1/push
 helm upgrade --install --values promtail-overrides.yaml promtail grafana/promtail -n grafana-loki
 
