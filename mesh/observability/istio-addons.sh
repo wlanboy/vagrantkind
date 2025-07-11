@@ -31,3 +31,5 @@ helm upgrade --install --values promtail-overrides.yaml promtail grafana/promtai
 # http://monitoring.ser.local/grafana/login
 # datasource loki http://loki-loki-distributed-gateway.grafana-loki.svc.cluster.local
 # dashboard id 15141
+
+kubectl apply -f istio-telemetry-envoy.yaml 

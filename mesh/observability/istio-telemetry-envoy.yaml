@@ -1,0 +1,17 @@
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: mesh-access-logging
+  namespace: istio-system
+spec:
+  # Selector to apply to specific workloads (optional)
+  # selector:
+  #   matchLabels:
+  #     app: your-app
+
+  accessLogging:
+    - providers:
+        - name: envoy # This specifies the default Envoy access log provider
+      # If you want to customize the log format, you can add:
+      # accessLogFormat: |
+      #   [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%" %RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT% %DURATION% "%REQ(X-FORWARDED-FOR)%" "%USER_AGENT%" "%REQ(X-REQUEST-ID)%" "%REQ(:AUTHORITY)%" "%TRAFFIC_DIRECTION%" "%ISTIO_CMDB_UID%" "%ISTIO_REQUEST_PROTOCOL%" "%UPSTREAM_HOST%" "%UPSTREAM_CLUSTER%" "%UPSTREAM_LOCAL_ADDRESS%" "%DOWNSTREAM_LOCAL_ADDRESS%" "%DOWNSTREAM_REMOTE_ADDRESS%" "%REQUESTED_SERVER_NAME%" "%ROUTE_NAME%"
