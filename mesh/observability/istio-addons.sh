@@ -33,3 +33,4 @@ helm upgrade --install --values promtail-overrides.yaml promtail grafana/promtai
 # dashboard id 15141
 
 kubectl apply -f istio-telemetry-envoy.yaml 
+#kubectl patch istiooperator <your-istiooperator-name> -n istio-system --type='json' -p='[{"op": "add", "path": "/spec/meshConfig/accessLogFile", "value": "/dev/stdout"}]'
