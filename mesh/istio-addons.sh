@@ -26,3 +26,5 @@ kubectl apply -f ${OBS_FOLDER}/istio-telemetry-envoy.yaml
 kubectl get configmap grafana -n istio-system -o yaml > grafana-configmap.yaml
 sed -i 's|http://loki:3100|http://loki-loki-distributed-gateway.grafana-loki.svc.cluster.local|g' grafana-configmap.yaml
 kubectl apply -f grafana-configmap.yaml
+
+kubectl rollout restart deployment/grafana -n istio-system
