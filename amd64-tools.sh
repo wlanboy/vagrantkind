@@ -11,7 +11,8 @@ KIND_VERSION="0.29.0"
 ISTIO_VERSION="1.26.2"
 K9S_VERSION="0.50.7"
 
-cd /home/vagrant && wget "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz"
+cd /home/vagrant
+wget "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz"
 tar -zxvf "helm-v${HELM_VERSION}-linux-amd64.tar.gz"
 sudo cp linux-amd64/helm /usr/local/bin/helm
 
