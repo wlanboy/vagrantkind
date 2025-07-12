@@ -3,3 +3,4 @@ tigera-operator.yaml
 custom-resources.yaml
 mesh/cluster.yaml
 mesh/metallb-config.yaml
+mesh/grafana-configmap.yaml
