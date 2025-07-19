@@ -1,4 +1,10 @@
 ---
+- name: Promtail Helm-Chart Overrides aus Template generieren
+  ansible.builtin.template:
+    src: promtail-overrides.yaml.j2
+    dest: /tmp/promtail-overrides.yaml
+    mode: '0644'
+
 - name: Promtail mit Helm installieren/aktualisieren
   kubernetes.helm:
     name: promtail
@@ -8,4 +14,4 @@
     state: present
     wait: true
     values_files:
-      - /tmp/promtail-overrides.yaml
+      - /tmp/promtail.yaml
