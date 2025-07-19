@@ -1,0 +1,12 @@
+---
+- name: Istio Telemetry Envoy Konfiguration aus Template generieren
+  ansible.builtin.template:
+    src: istio-telemetry-envoy.yaml.j2
+    dest: /tmp/istio-telemetry-envoy.yaml
+    mode: '0644'
+
+- name: Istio Telemetry Envoy Konfiguration anwenden
+  kubernetes.builtin.k8s:
+    state: present
+    namespace: "{{ istio_namespace | default('istio-system') }}"
+    src: /tmp/istio-telemetry-envoy.yaml
