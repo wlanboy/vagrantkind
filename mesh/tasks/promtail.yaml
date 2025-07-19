@@ -1,0 +1,11 @@
+---
+- name: Promtail mit Helm installieren/aktualisieren
+  kubernetes.helm:
+    name: promtail
+    chart_ref: grafana/promtail
+    namespace: istio-system
+    create_namespace: true
+    state: present
+    wait: true
+    values_files:
+      - /tmp/promtail-overrides.yaml
