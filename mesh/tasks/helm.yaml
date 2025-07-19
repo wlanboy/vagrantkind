@@ -1,0 +1,10 @@
+---
+- name: Helm Repository für Grafana hinzufügen
+  kubernetes.helm:
+    name: grafana
+    chart_repo_url: https://grafana.github.io/helm-charts
+    state: present
+
+- name: Helm Repositories aktualisieren
+  ansible.builtin.command: helm repo update
+  changed_when: true
