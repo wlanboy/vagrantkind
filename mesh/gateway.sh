@@ -19,7 +19,7 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "httpbin.example.com"
+    - "httpbin.ser.local"
 EOF
 
 kubectl apply -f - <<EOF
@@ -29,7 +29,7 @@ metadata:
   name: httpbin
 spec:
   hosts:
-  - "httpbin.example.com"
+  - "httpbin.ser.local"
   gateways:
   - httpbin-gateway
   http:
@@ -54,6 +54,6 @@ export INGRESS_PORT=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o js
 export SECURE_INGRESS_PORT=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o jsonpath='{.spec.ports[?(@.name=="https")].port}')
 export TCP_INGRESS_PORT=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o jsonpath='{.spec.ports[?(@.name=="tcp")].port}')
 
- curl -s -I -HHost:httpbin.example.com "http://$INGRESS_HOST:$INGRESS_PORT/status/200"
+ curl -s -I -HHost:httpbin.ser.local "http://$INGRESS_HOST:$INGRESS_PORT/status/200"
  
 
