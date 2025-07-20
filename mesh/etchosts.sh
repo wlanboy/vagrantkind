@@ -15,7 +15,7 @@ cp /etc/hosts /etc/hosts.bak
 # Host-Einträge hinzufügen, falls sie noch nicht vorhanden sind
 for HOST in "${HOSTS[@]}"; do
   if ! grep -q "$HOST" /etc/hosts; then
-    echo "$IP    $HOST" >> /etc/hosts
+    sudo echo "$IP    $HOST" >> /etc/hosts
     echo "Hinzugefügt: $HOST -> $IP"
   else
     echo "Eintrag existiert bereits: $HOST"
