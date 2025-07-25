@@ -1,0 +1,69 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: cluster2-eastwest-gateway
+spec:
+  hosts:
+  - 'cluster2-eastwest.global'
+  addresses:
+  - 203.0.113.10         # Statisches Ziel-IP
+  ports:
+  - number: 15443
+    name: tls
+    protocol: TLS
+  location: MESH_EXTERNAL
+  resolution: STATIC
+  endpoints:
+  - address: 203.0.113.10
+    ports:
+      tls: 15443
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: egress-to-cluster2
+  namespace: istio-system
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - port:
+      number: 443
+      name: tls
+      protocol: TLS
+    hosts:
+    - '*.cluster2.svc.cluster.local'
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: route-ratings-via-egress
+  namespace: default
+spec:
+  hosts:
+  - '*.cluster2.svc.cluster.local'
+  gateways:
+  - istio-system/egress-to-cluster2
+  tls:
+  - match:
+    - port: 443
+      sniHosts:
+      - '*.cluster2.svc.cluster.local'
+    route:
+    - destination:
+        host: 'cluster2-eastwest.global'
+        port:
+          number: 15443
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: cluster2-eastwest-dr
+spec:
+  host: 'cluster2-eastwest.global'
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
