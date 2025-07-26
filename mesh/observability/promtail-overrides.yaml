@@ -127,6 +127,11 @@ config:
             regex: ^;*([^;]+)(;.*)?$
             action: replace
             target_label: component
+          - source_labels:
+              - __meta_kubernetes_container_name
+            regex: ^;*([^;]+)(;.*)?$
+            action: replace
+            target_label: container
           {{- if .Values.config.snippets.addScrapeJobLabel }}
           - replacement: kubernetes-pods
             target_label: scrape_job
