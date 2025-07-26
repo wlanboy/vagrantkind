@@ -1,6 +1,9 @@
 #!/bin/bash
 ISTIO_VERSION="1.26.2"
 cd ~/istio-${ISTIO_VERSION}
+
+kubectl label namespace default istio-injection=enabled --overwrite=true 
+
 kubectl apply -f samples/httpbin/httpbin.yaml
 
 kubectl apply -f - <<EOF
