@@ -23,8 +23,7 @@ vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a si
 * see: https://github.com/wlanboy/vagrantkind/blob/main/setup-kind.sh
 
 # destroy kind kubernetes cluster
-* kind delete cluster
-* or kind delete clusters kindcluster
+* kind delete clusters kindcluster
 
 # example log for cluster creation
 ```
@@ -77,7 +76,7 @@ local-path-storage   local-path-provisioner-547f784dff-gbhsc      1/1     Runnin
 # deploy echo service for testing
 * kubectl apply -f echo-pod-service.yml
 
-# start deployen Spring Boot based Service
+# start deploying Spring Boot based Service
 * see: https://github.com/wlanboy/virtualbox-kubernets/blob/main/deploy-a-service.md
 
 # Delete cluster
