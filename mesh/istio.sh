@@ -33,7 +33,7 @@ helm install istio-ingressgateway ${ISTIO_HELM_REPO_NAME}/gateway --version "${I
 echo "   'istio-ingressgateway' erfolgreich installiert."
 
 echo "Überprüfe den Status der Istio-Pods..."
-kubectl get pods -n istio-system
+kubectl get pods -n istio-system -o wide
 
 echo ""
 echo "--- Istio-Installation abgeschlossen! ---"
