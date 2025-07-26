@@ -35,6 +35,10 @@ METALLB_IP_RANGE="${BASE_IP}.100.10-${BASE_IP}.100.100"
 echo "   Erkannte Kind-Netzwerk-CIDR: ${KIND_NET_CIDR}"
 echo "   Vorgeschlagener MetalLB-IP-Bereich: ${METALLB_IP_RANGE}"
 
+echo "Node Labels hinzufügen:"
+kubectl label node ${CLUSTER_NAME}-control-plane role=gateway
+kubectl label node ${CLUSTER_NAME}-worker role=service
+
 echo "Installiere MetalLB Native vom Manifest: ${METALLB_MANIFEST_URL}..."
 kubectl apply -f "${METALLB_MANIFEST_URL}"
 echo "   MetalLB-Manifest angewendet."
