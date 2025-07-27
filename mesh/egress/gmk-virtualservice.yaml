@@ -1,0 +1,23 @@
+# gmk-virtualservice.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: direct-gmk-through-egress-gateway
+  namespace: gmk
+spec:
+  hosts:
+  - gmk.fritz.box
+  gateways:
+  - mesh
+  - istio-egressgateway
+  http:
+  - match:
+    - gateways:
+      - mesh # This rule applies to traffic originating from application sidecars
+      port: 80 # Or 443 for HTTPS
+    route:
+    - destination:
+        host: istio-egressgateway.istio-system.svc.cluster.local # Direct traffic to the Egress Gateway service
+        port:
+          number: 80 # Or 443, depending on the egress gateway listener port
+      weight: 100
