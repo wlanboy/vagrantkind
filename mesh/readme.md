@@ -15,3 +15,5 @@ create local kind cluster with istio, metallb, istio, ingress and egress gateway
 
 ## install http tester
 * sh http-tester.sh
+* open http tester: http://tester.ser.local/
+* enter http://gmk.fritz.box:4000 for get request
