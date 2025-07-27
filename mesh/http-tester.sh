@@ -54,6 +54,6 @@ export INGRESS_PORT=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o js
 export SECURE_INGRESS_PORT=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o jsonpath='{.spec.ports[?(@.name=="https")].port}')
 export TCP_INGRESS_PORT=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o jsonpath='{.spec.ports[?(@.name=="tcp")].port}')
 
-curl -s -I -HHost:http.ser.local "http://$INGRESS_HOST:$INGRESS_PORT/status/200"
-curl -s -I http.ser.local/status/200
+curl -s -I -HHost:http.ser.local "http://$INGRESS_HOST:$INGRESS_PORT/"
+curl -s -I http.ser.local
  
