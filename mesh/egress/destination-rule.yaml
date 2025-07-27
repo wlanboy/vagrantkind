@@ -1,0 +1,12 @@
+# gmk-external-dr.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: gmkexternal-dr
+  # Place this DR in the same namespace as the ServiceEntry, or istio-system
+  namespace: gmk # Or 'istio-system' for mesh-wide control
+spec:
+  host: gmk.fritz.box
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
