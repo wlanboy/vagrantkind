@@ -35,6 +35,7 @@ echo "   'istio-ingressgateway' erfolgreich installiert."
 echo "Installiere 'istio-egressgateway' (istio/gateway Chart) Version ${ISTIO_VERSION}..."
 helm install istio-egressgateway ${ISTIO_HELM_REPO_NAME}/gateway --version "${ISTIO_VERSION}" \
   --namespace istio-system \
+  --set gatewayType=egress \
   --wait
 echo "   'istio-eressgateway' erfolgreich installiert."
 
