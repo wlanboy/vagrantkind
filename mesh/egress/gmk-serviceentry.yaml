@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: gmkexternal
+  namespace: gmk
+spec:
+  hosts:
+  - gmk.fritz.box
+  ports:
+  - number: 4000
+    name: http
+    protocol: HTTP
+  resolution: NONE # STATIC Or DNS Because resolution: NONE is set on the ServiceEntry, the sidecar consults VirtualService rules.
+  location: MESH_EXTERNAL # Marks this as an external service
+  exportTo:
+  - "."      # Make it visible within its own namespace (gmk)
+  - "demo"   # Make it visible within the namespace demo
