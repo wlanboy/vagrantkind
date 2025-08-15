@@ -1,9 +1,0 @@
----
-- name: Loki mit Helm installieren/aktualisieren
-  kubernetes.helm:
-    name: loki
-    chart_ref: grafana/loki-distributed
-    namespace: istio-system
-    create_namespace: true
-    state: present
-    wait: true
