@@ -9,3 +9,6 @@ kubectl get svc istio-ingressgateway -n istio-system
 
 kubectl patch svc istio-ingressgateway -n istio-system \
   -p '{"spec": {"type": "NodePort", "ports":[{"name":"http2","port":80,"nodePort":30080},{"name":"https","port":443,"nodePort":30443}]}}'
+
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 30080
+sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 30443
