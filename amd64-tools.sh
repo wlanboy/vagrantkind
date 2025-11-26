@@ -6,10 +6,14 @@ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stabl
 chmod +x ./kubectl
 sudo cp ./kubectl /usr/local/bin
 
-HELM_VERSION="3.18.2"
-KIND_VERSION="0.29.0"
-ISTIO_VERSION="1.26.2"
-K9S_VERSION="0.50.7"
+# see https://github.com/helm/helm/releases
+HELM_VERSION="3.19.2"
+# see https://github.com/kubernetes-sigs/kind/releases/
+KIND_VERSION="0.30.0"
+# see https://github.com/istio/istio/releases/
+ISTIO_VERSION="1.28.0"
+# see https://github.com/derailed/k9s/releases
+K9S_VERSION="0.50.16"
 
 cd /home/vagrant
 wget "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz"
