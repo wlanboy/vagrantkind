@@ -15,7 +15,7 @@ ISTIO_VERSION="1.28.0"
 # see https://github.com/derailed/k9s/releases
 K9S_VERSION="0.50.16"
 
-cd /home/vagrant
+cd ~
 wget "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz"
 tar -zxvf "helm-v${HELM_VERSION}-linux-amd64.tar.gz"
 sudo cp linux-amd64/helm /usr/local/bin/helm
