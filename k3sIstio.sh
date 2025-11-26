@@ -6,3 +6,6 @@ sudo chown $USER:$USER ~/.kube/config
 istioctl install --set profile=default -y
 
 kubectl get svc istio-ingressgateway -n istio-system
+
+kubectl patch svc istio-ingressgateway -n istio-system \
+  -p '{"spec": {"type": "NodePort", "ports":[{"name":"http2","port":80,"nodePort":30080},{"name":"https","port":443,"nodePort":30443}]}}'
