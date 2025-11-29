@@ -14,7 +14,7 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-  - "$(curl -s https://api.ipify.org)"
+  - "argocd.gmk.local"
 EOF
 
 cat <<EOF | envsubst | kubectl apply -n argocd -f -
@@ -35,7 +35,7 @@ spec:
       mode: SIMPLE
       credentialName: argocd-tls
     hosts:
-    - "$(curl -s https://api.ipify.org)"
+    - "argocd.gmk.local"
 EOF
 
 kubectl apply -n argocd -f - <<EOF
@@ -46,7 +46,7 @@ metadata:
   namespace: argocd
 spec:
   hosts:
-  - "$(curl -s https://api.ipify.org)"
+  - "argocd.gmk.local"
   gateways:
   - argocd/argocd-gateway
   http:
