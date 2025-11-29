@@ -3,10 +3,10 @@ apiVersion: kind.x-k8s.io/v1alpha4
 name: local
 networking:
   ipFamily: ipv4
-  apiServerAddress: "192.168.178.91"
+  apiServerAddress: "192.168.178.37"
   apiServerPort: 6443
   podSubnet: "192.168.0.0/16"
-  disableDefaultCNI: true
+  disableDefaultCNI: false
   kubeProxyMode: "iptables"
 nodes:
 - role: control-plane
@@ -23,7 +23,7 @@ nodes:
     patch: |
       - op: add
         path: /apiServer/certSANs/-
-        value: 192.168.178.91  
+        value: 192.168.178.37
       - op: add
         path: /apiServer/certSANs/-
         value: 127.0.0.1
@@ -34,13 +34,4 @@ nodes:
   - containerPort: 443
     hostPort: 9443
     protocol: TCP
-  - containerPort: 30000
-    hostPort: 80
-    protocol: TCP
-  - containerPort: 30001
-    hostPort: 443
-    protocol: TCP
-  - containerPort: 30002
-    hostPort: 15021
-    protocol: TCP    
 - role: worker
