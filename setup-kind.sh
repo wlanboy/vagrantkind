@@ -36,6 +36,7 @@ kubectl apply -f "${METALLB_MANIFEST_URL}"
 echo "MetalLB controller applied."
 
 echo "Applying MetalLB IP address pool configuration..."
+kubectl -n metallb-system wait --for=condition=Ready --all pods --timeout 60s
 kubectl apply -f metallb-pool.yaml
 kubectl apply -f metallb-adv.yaml
 echo "MetalLB IP pools configured."
