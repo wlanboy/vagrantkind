@@ -3,14 +3,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: echo-app
-  name: echo-app
+    app: demo-app
+  name: demo-app
   namespace: demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: echo-app
+      app: demo-app
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -19,10 +19,10 @@ spec:
   template:
     metadata:
       labels:
-        app: echo-app
+        app: demo-app
     spec:
       containers:
-      - name: echo
+      - name: demo
         image: nginx:latest
         imagePullPolicy: IfNotPresent
         ports:
@@ -37,22 +37,23 @@ spec:
       securityContext: {}
       terminationGracePeriodSeconds: 30
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: echo-service
+  name: demo-app
   namespace: demo
 spec:
   selector:
-    app: echo-app
+    app: demo-app
   ports:
-  - port: 80
-  type: LoadBalancer
+  - name: http
+    port: 80
+    targetPort: 80
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: echo-gateway
+  name: demo-gateway
   namespace: demo
 spec:
   selector:
@@ -68,20 +69,25 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: "echo-service"
+  name: demo-service
   namespace: demo
 spec:
   hosts:
   - "demo.local"
+  exportTo:
+  - "."
+  - istio-ingress
+  - istio-system
   gateways:
   - demo-gateway
+  - mesh
   http:
   - match:
     - uri:
         prefix: /
     route:
     - destination:
-        host: "echo"
+        host: demo-app.demo.svc.cluster.local
         port:
           number: 80
 ---
