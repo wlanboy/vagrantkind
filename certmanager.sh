@@ -1,21 +1,33 @@
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.1/cert-manager.yaml
+#!/bin/bash
 
-export EMAIL="xxx"
+kubectl create namespace cert-manager
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
 
-cat <<EOF | envsubst | kubectl apply -f -
+kubectl create namespace cert-manager
+
+helm install \
+cert-manager jetstack/cert-manager \
+--namespace cert-manager \
+--set crds.enabled=true
+
+kubectl create secret tls my-local-ca-secret \
+--namespace cert-manager \
+--cert=/local-ca/ca.pem \
+--key=/local-ca/ca.key
+
+cat <<EOF | kubectl apply -f -
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: letsencrypt-prod
-  namespace: istio-system
+  name: local-ca-issuer
+  namespace: cert-manager
 spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: $EMAIL
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: istio
+  ca:
+    secretName: my-local-ca-secret
 EOF
+
+echo "Überprüfe den Status der cert-manager-Pods..."
+kubectl get pods -n cert-manager -o wide
+echo "Überprüfe die cert-manager-Installation..."
+kubectl get clusterissuers
