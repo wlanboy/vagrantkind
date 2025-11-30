@@ -12,8 +12,8 @@ echo "MetalLB controller applied."
 
 echo "Applying MetalLB IP address pool configuration..."
 kubectl -n metallb-system wait --for=condition=Ready --all pods --timeout 60s
-kubectl apply -f metallb-pool.yaml
-kubectl apply -f metallb-adv.yaml
+kubectl apply -f wsl-metallb-pool.yaml
+kubectl apply -f wsl-metallb-adv.yaml
 echo "MetalLB IP pools configured."
 
 # Delete cluster
