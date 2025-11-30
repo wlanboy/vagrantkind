@@ -60,7 +60,7 @@ kubectl apply -f echo-service-istio.yaml
 echo "Demo service deployment initiated."
 
 # test
-curl -I -H "Host: demo.local" http://172.18.100.10/
+curl -I -H "Host: demo.tp.lan" http://172.18.100.10/
 
 # Delete cluster
 #kind delete clusters local

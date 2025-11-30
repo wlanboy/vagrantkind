@@ -9,6 +9,13 @@ vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a si
 * [https://gist.github.com/wlanboy/metallb-pool.yaml](https://gist.github.com/wlanboy/154123f2a793477a0a4f96734babe49c)
 * [https://gist.github.com/wlanboy/metallb-adv.yaml](https://gist.github.com/wlanboy/d831507dfd472947f2781254d0dba487)
 
+# gists for local cluster
+```bash
+./install-local-kind.sh
+./install-certmanager.sh
+./install-argocd.sh
+```
+
 # create vm
 * vagrant up
 

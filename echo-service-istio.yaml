@@ -65,6 +65,7 @@ spec:
       protocol: HTTP
     hosts:
     - "demo.local"
+    - "demo.tp.lan"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -74,6 +75,7 @@ metadata:
 spec:
   hosts:
   - "demo.local"
+  - "demo.tp.lan"
   exportTo:
   - "."
   - istio-ingress

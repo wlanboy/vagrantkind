@@ -1,12 +1,12 @@
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
-helm install argocd argo/argo-cd -n argocd --create-namespace -f values-istio.yaml
+helm install argocd argo/argo-cd -n argocd --create-namespace -f argocd-values-istio.yaml
 
 cat <<EOF | envsubst | kubectl apply -f -
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: argocd-cert
+  name: argocd-cert-secret
   namespace: istio-ingress
 spec:
   secretName: argocd-cert-secret
@@ -24,12 +24,12 @@ spec:
     kind: ClusterIssuer
 EOF
 
-cat <<EOF | envsubst | kubectl apply -n argocd -f -
+cat <<EOF | envsubst | kubectl apply -f -
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   name: argocd-gateway
-  namespace: argocd
+  namespace: istio-ingress
 spec:
   selector:
     istio: ingressgateway
@@ -45,7 +45,7 @@ spec:
     - "argocd.tp.lan"
 EOF
 
-kubectl apply -n argocd -f - <<EOF
+kubectl apply -f - <<EOF
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -59,27 +59,19 @@ spec:
   - istio-ingress
   - istio-system
   gateways:
-  - argocd/argocd-gateway
+  - istio-ingress/argocd-gateway
   - mesh
   http:
   # Route für das Web-UI (HTTP)
   - match:
     - uri:
-        prefix: /argocd
+        prefix: /
     route:
     - destination:
-        host: argocd-server.argocd.svc.cluster.local
+        host: argocd-server
         port:
           number: 80
-  tcp:
-  # Route für gRPC-Web (CLI)
-  - match:
-    - port: 443
-    route:
-    - destination:
-        host: argocd-server.argocd.svc.cluster.local
-        port:
-          number: 443
 EOF
 
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=30s
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
