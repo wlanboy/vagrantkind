@@ -4,35 +4,43 @@ vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a si
 # simple path without istio, but with calico and ingress
 * see: https://github.com/wlanboy/vagrantkind/blob/main/arm64-steps.md
 
-# gists for WSL
-* [https://gist.github.com/wlanboy/steps.sh](https://gist.github.com/wlanboy/984d9d4785f3698aff7b38538f4d8e29)
-* [https://gist.github.com/wlanboy/metallb-pool.yaml](https://gist.github.com/wlanboy/154123f2a793477a0a4f96734babe49c)
-* [https://gist.github.com/wlanboy/metallb-adv.yaml](https://gist.github.com/wlanboy/d831507dfd472947f2781254d0dba487)
-
-# gists for local cluster
+# installation for WSL kind cluster using dns tp.lan
 ```bash
-./install-local-kind.sh
+./install-wsl-kind.sh
+./install-istio.sh
 ./install-certmanager.sh
 ./install-argocd.sh
+./add-dns.sh wsl
 ```
 
-# create vm
+# installation for local kind cluster using dns tp.lan
+```bash
+./install-local-kind.sh
+./install-istio.sh
+./install-certmanager.sh
+./install-argocd.sh
+./add-dns.sh linux
+```
+
+# installation using vagrant
+
+## create vm
 * vagrant up
 
-# ssh into vm
+## ssh into vm
 * vagrant ssh
 
-# create kind kubernetes cluster
+## create kind kubernetes cluster
 * kind create cluster
 
-# or create kind cluster with config for all services (calico + istio)
+## or create kind cluster with config for all services (calico + istio)
 * sh setup-kind.sh
 * see: https://github.com/wlanboy/vagrantkind/blob/main/setup-kind.sh
 
-# destroy kind kubernetes cluster
+## destroy kind kubernetes cluster
 * kind delete clusters kindcluster
 
-# example log for cluster creation
+## example log for cluster creation
 ```
 vagrant@kind:~$ kind create cluster
 Creating cluster "kind" ...
@@ -48,7 +56,7 @@ You can now use your cluster with:
 kubectl cluster-info --context kind-kind
 ```
 
-# get basic cluster information
+## get basic cluster information
 * kubectl cluster-info --context kind-kind
 ```
 vagrant@kind:~$ kubectl cluster-info --context kind-kind
@@ -77,14 +85,9 @@ kube-system          kube-proxy-5gv5b                             1/1     Runnin
 kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          4m9s
 local-path-storage   local-path-provisioner-547f784dff-gbhsc      1/1     Running   0          4m
 ```
-# see shell scripts to install calico and istio
-- https://github.com/wlanboy/vagrantkind/blob/main/setup-kind.sh
 
-# deploy echo service for testing
-* kubectl apply -f echo-pod-service.yml
-
-# start deploying Spring Boot based Service
+## start deploying Spring Boot based Service
 * see: https://github.com/wlanboy/virtualbox-kubernets/blob/main/deploy-a-service.md
 
-# Delete cluster
+## Delete cluster
 * kind delete clusters kindcluster
