@@ -4,6 +4,9 @@ vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a si
 # simple path without istio, but with calico and ingress
 * see: https://github.com/wlanboy/vagrantkind/blob/main/arm64-steps.md
 
+# prepare own ca
+* see: https://github.com/wlanboy/raspberrypi/blob/main/ca/readme.md
+
 # installation for WSL kind cluster using dns tp.lan
 ```bash
 ./install-wsl-kind.sh
