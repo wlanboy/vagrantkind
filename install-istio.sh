@@ -39,3 +39,4 @@ echo "Demo service deployment initiated."
 
 # test
 curl -I -H "Host: demo.tp.lan" http://172.18.100.10/
+curl -I -H "Host: demo.kube.lan" http://172.18.0.2:32024/
