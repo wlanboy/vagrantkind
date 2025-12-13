@@ -10,7 +10,9 @@ curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_CHANNEL=sta
 
 sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml
 sudo chown $USER:$USER ~/.kube/k3s.yaml
+cp ~/.kube/k3s.yaml ~/.kube/config
 sed -i "s/127.0.0.1/$LOKALE_IP/" ~/.kube/k3s.yaml
+sed -i "s/127.0.0.1/$LOKALE_IP/" ~/.kube/config
 
 echo "Installing MetalLB (version ${METALLB_VERSION})..."
 METALLB_MANIFEST_URL="https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml"
