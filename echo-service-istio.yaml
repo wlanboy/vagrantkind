@@ -67,6 +67,7 @@ spec:
     - "demo.local"
     - "demo.tp.lan"
     - "demo.kube.lan"
+    - "demo.gmkc.lan"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -78,6 +79,7 @@ spec:
   - "demo.local"
   - "demo.tp.lan"
   - "demo.kube.lan"
+  - "demo.gmkc.lan"
   exportTo:
   - "."
   - istio-ingress
