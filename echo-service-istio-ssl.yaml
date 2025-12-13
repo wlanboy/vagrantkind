@@ -66,6 +66,8 @@ spec:
   - "demo.tp.lan"
   - "demo.kube.lan"
   - "demo.gmkc.lan"
+  privateKey:
+      rotationPolicy: Always
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
