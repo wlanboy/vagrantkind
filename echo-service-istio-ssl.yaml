@@ -54,7 +54,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: demo-app-cert
-  namespace: demo
+  namespace: istio-ingress
 spec:
   secretName: demo-tls-secret
   issuerRef:
