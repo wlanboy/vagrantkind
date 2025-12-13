@@ -86,17 +86,17 @@ spec:
     - "demo.kube.lan"
     - "demo.gmkc.lan"
   - port:
-        number: 443
-        name: https
-        protocol: HTTPS
-        hosts:
-        - "demo.local"
-        - "demo.tp.lan"
-        - "demo.kube.lan"
-        - "demo.gmkc.lan"
-        tls:
-          mode: SIMPLE
-          credentialName: demo-tls-secret
+      number: 443
+      name: https
+      protocol: HTTPS
+      hosts:
+      - "demo.local"
+      - "demo.tp.lan"
+      - "demo.kube.lan"
+      - "demo.gmkc.lan"
+      tls:
+        mode: SIMPLE
+        credentialName: demo-tls-secret
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
