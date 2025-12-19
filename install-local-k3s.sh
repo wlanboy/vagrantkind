@@ -14,6 +14,9 @@ cp ~/.kube/k3s.yaml ~/.kube/config
 sed -i "s/127.0.0.1/$LOKALE_IP/" ~/.kube/k3s.yaml
 sed -i "s/127.0.0.1/$LOKALE_IP/" ~/.kube/config
 
+sudo cp /var/lib/rancher/k3s/server/node-token ~/.kube/node-token
+sudo chown $USER:$USER ~/.kube/node-token
+
 echo "Installing MetalLB (version ${METALLB_VERSION})..."
 METALLB_MANIFEST_URL="https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml"
 kubectl apply -f "${METALLB_MANIFEST_URL}"
