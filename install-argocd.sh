@@ -19,6 +19,7 @@ spec:
     - client auth
   dnsNames:
     - argocd.tp.lan
+    - argocd.gmk.lan
   issuerRef:
     name: local-ca-issuer
     kind: ClusterIssuer
@@ -43,6 +44,7 @@ spec:
       credentialName: argocd-cert-secret
     hosts:
     - "argocd.tp.lan"
+    - "argocd.gmk.lan"
 EOF
 
 kubectl apply -f - <<EOF
@@ -54,6 +56,7 @@ metadata:
 spec:
   hosts:
   - "argocd.tp.lan"
+  - "argocd.gmk.lan"
   exportTo:
   - "."
   - istio-ingress
