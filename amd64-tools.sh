@@ -40,6 +40,6 @@ tar -zxvf k9s_Linux_amd64.tar.gz
 sudo install -m 555 k9s /usr/local/bin/k9s
 rm k9s_Linux_amd64.tar.gz
 
-curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/${ARGOCD_VERSION}/download/argocd-linux-amd64
+curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64
 sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
 rm argocd-linux-amd64
