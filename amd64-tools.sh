@@ -43,3 +43,7 @@ rm k9s_Linux_amd64.tar.gz
 curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64
 sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
 rm argocd-linux-amd64
+
+wget https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64
+sudo install -m 555 hey_linux_amd64 /usr/local/bin/hey
+rm hey_linux_amd64
