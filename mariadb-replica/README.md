@@ -1,4 +1,5 @@
 # Install mariadb replica cluster
+Kubectl commands to install a mariadb replica cluster in kubernetes.
 
 ## create namespace
 ```
