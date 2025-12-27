@@ -1,4 +1,6 @@
 # kind + calico + ngxin ingress
+Commands to install kind, calico and nginx on arm64.
+
 see:
 * https://www.armbian.com/odroid-c2/#kernels-archive-all
 * https://docs.armbian.com/
