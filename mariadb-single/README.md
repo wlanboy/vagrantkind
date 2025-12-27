@@ -1,4 +1,6 @@
 # Install mariadb
+Kubectl commands to install a mariadb instance in kubernetes.
+
 
 ## create namespace
 ```
