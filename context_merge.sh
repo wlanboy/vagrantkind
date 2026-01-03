@@ -39,6 +39,7 @@ echo "🔄 Setze KUBECONFIG zurück..."
 unset KUBECONFIG
 
 echo "📋 Verfügbare Kontexte:"
+kubectl config use-context ${SERVER1}
 kubectl config get-contexts
 
 echo "✅ Fertig! Deine gemergte kubeconfig liegt jetzt in ~/.kube/config"
