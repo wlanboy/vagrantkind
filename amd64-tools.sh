@@ -47,3 +47,5 @@ rm argocd-linux-amd64
 wget https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64
 sudo install -m 555 hey_linux_amd64 /usr/local/bin/hey
 rm hey_linux_amd64
+
+curl -fsSL https://raw.githubusercontent.com/metalbear-co/mirrord/main/scripts/install.sh | bash
