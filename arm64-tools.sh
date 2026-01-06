@@ -30,13 +30,9 @@ tar -zxvf "istio-${ISTIO_VERSION}-linux-arm64.tar.gz"
 sudo cp "istio-${ISTIO_VERSION}/bin/istioctl" /usr/local/bin
 
 curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-arm64
-sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
-rm argocd-linux-amd64
+sudo install -m 555 argocd-linux-arm64 /usr/local/bin/argocd
+rm argocd-linux-arm64
 
-wget https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_arm64
-sudo install -m 555 hey_linux_amd64 /usr/local/bin/hey
-rm hey_linux_amd64
-
-wget "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_Linux_amd64.tar.gz"
-tar -zxvf k9s_Linux_amd64.tar.gz
+wget "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_Linux_arm64.tar.gz"
+tar -zxvf k9s_Linux_arm64.tar.gz
 sudo cp ./k9s /usr/local/bin
