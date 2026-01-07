@@ -1,0 +1,86 @@
+sudo apt update
+sudo apt install -y open-iscsi nfs-common
+sudo systemctl enable --now iscsid
+
+helm repo add longhorn https://charts.longhorn.io
+helm repo update
+
+kubectl create namespace longhorn-system
+
+helm install longhorn longhorn/longhorn \
+  --namespace longhorn-system \
+  --set defaultSettings.defaultReplicaCount=1 \
+  --set persistence.defaultClassReplicaCount=1
+
+cat <<EOF | envsubst | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: longhorn-cert-secret
+  namespace: istio-ingress
+spec:
+  secretName: longhorn-cert-secret
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  commonName: longhorn.tp.lan
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - longhorn.tp.lan
+    - longhorn.gmk.lan
+  issuerRef:
+    name: local-ca-issuer
+    kind: ClusterIssuer
+EOF
+
+cat <<EOF | envsubst | kubectl apply -f -
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: longhorn-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: longhorn-cert-secret
+    hosts:
+    - "longhorn.tp.lan"
+    - "longhorn.gmk.lan"
+EOF
+
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: longhorn-vs
+  namespace: longhorn-system
+spec:
+  hosts:
+  - "longhorn.tp.lan"
+  - "longhorn.gmk.lan"
+  exportTo:
+  - "."
+  - istio-ingress
+  - istio-system
+  gateways:
+  - istio-ingress/longhorn-gateway
+  - mesh
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: longhorn-frontend
+        port:
+          number: 80
+EOF
