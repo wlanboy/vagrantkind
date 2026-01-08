@@ -60,9 +60,5 @@ echo "NFSv4 export root: $EXPORT_ROOT"
 echo "Exported backup dir: $EXPORT_DIR"
 echo "Allowed network: $NETWORK_CIDR"
 echo
-echo "Longhorn Backup Target URL:"
-echo "nfs://gmk:/longhorn-backups"
-echo
-echo "Trage diese URL in Longhorn ein unter:"
-echo "Settings → Backup Target"
-echo "Backup Target Credential Secret: leer lassen"
+echo "Backup Target URL:"
+echo "nfs://gmk:/k8s-backups"
