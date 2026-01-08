@@ -22,13 +22,12 @@ spec:
   secretName: longhorn-cert-secret
   duration: 2160h # 90d
   renewBefore: 360h # 15d
-  commonName: longhorn.tp.lan
+  commonName: longhorn.gmk.lan
   isCA: false
   usages:
     - server auth
     - client auth
   dnsNames:
-    - longhorn.tp.lan
     - longhorn.gmk.lan
   issuerRef:
     name: local-ca-issuer
@@ -40,7 +39,7 @@ apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   name: longhorn-gateway
-  namespace: istio-ingress
+  namespace: longhorn-system
 spec:
   selector:
     istio: ingressgateway
@@ -53,7 +52,6 @@ spec:
       mode: SIMPLE
       credentialName: longhorn-cert-secret
     hosts:
-    - "longhorn.tp.lan"
     - "longhorn.gmk.lan"
 EOF
 
@@ -65,7 +63,6 @@ metadata:
   namespace: longhorn-system
 spec:
   hosts:
-  - "longhorn.tp.lan"
   - "longhorn.gmk.lan"
   exportTo:
   - "."
@@ -74,13 +71,20 @@ spec:
   gateways:
   - istio-ingress/longhorn-gateway
   - mesh
+spec:
+  exportTo:
+    - .
+    - istio-ingress
+    - istio-system
+  gateways:
+    - longhorn-gateway
+    - mesh
+  hosts:
+    - longhorn.gmk.lan
   http:
-  - match:
-    - uri:
-        prefix: /
-    route:
-    - destination:
-        host: longhorn-frontend
-        port:
-          number: 80
+    - route:
+        - destination:
+            host: longhorn-frontend
+            port:
+              number: 80
 EOF
