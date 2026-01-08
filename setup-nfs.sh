@@ -2,13 +2,13 @@
 set -euo pipefail
 
 # === CONFIG ===
-REAL_DIR="/mnt/sata/longhorn-backups"
+REAL_DIR="/mnt/sata/k8s-backups"
 EXPORT_ROOT="/export"
-EXPORT_DIR="${EXPORT_ROOT}/longhorn-backups"
+EXPORT_DIR="${EXPORT_ROOT}/k8s-backups"
 NETWORK_CIDR="192.168.178.0/24"
 EXPORT_OPTIONS="rw,sync,no_subtree_check,no_root_squash"
 
-echo "=== Longhorn NFSv4 Backup Server Setup (Debian/Ubuntu) ==="
+echo "=== k8s NFSv4 Backup Server Setup (Debian/Ubuntu) ==="
 
 # --- Install NFS server ---
 echo "Installing NFS server..."
