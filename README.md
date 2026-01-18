@@ -1,96 +1,171 @@
-# vagrantkind
-vagrant machine installing docker, kubectrl, istioctl, helm and kind to run a simple local kubernetes cluster
+# Kubernetes Cluster Setup
 
-# simple path without istio, but with calico and ingress
-* see: https://github.com/wlanboy/vagrantkind/blob/main/arm64-steps.md
+Dieses Repository enthält Skripte zum Aufbau eines lokalen Kubernetes-Clusters mit MetalLB, Istio, Cert-Manager und ArgoCD.
 
-# prepare own ca
-* see: https://github.com/wlanboy/raspberrypi/blob/main/ca/readme.md
+## Unterstützte Plattformen
 
-# installation for WSL kind cluster using dns tp.lan
+- **Kind** auf Linux
+- **Kind** auf WSL (Windows Subsystem for Linux)
+- **K3s** auf Linux (Single-Node oder Multi-Node)
+
+## Voraussetzungen
+
+Vor der Cluster-Installation müssen die benötigten CLI-Tools installiert werden.
+
+### Client-Tools installieren
+
+Je nach Architektur eines der folgenden Skripte ausführen:
+
+| Skript | Beschreibung |
+|--------|--------------|
+| [amd64-tools.sh](amd64-tools.sh) | Installiert kubectl, helm, kind, istioctl, k9s, argocd-cli, hey und mirrord für x86_64 Systeme |
+| [arm64-tools.sh](arm64-tools.sh) | Installiert kubectl, helm, kind und istioctl für ARM64 Systeme |
+| [versions.sh](versions.sh) | Zentrale Versionsverwaltung für alle Tools |
+
 ```bash
-./install-wsl-kind.sh
-./install-istio.sh
-./install-certmanager.sh
-./install-argocd.sh
-./add-dns.sh wsl
+# Für x86_64 / amd64
+./amd64-tools.sh
+
+# Für ARM64
+./arm64-tools.sh
 ```
 
-# installation for local kind cluster using dns tp.lan
+## Installation
+
+### Option 1: Kind auf Linux
+
 ```bash
 ./install-local-kind.sh
 ./install-istio.sh
 ./install-certmanager.sh
 ./install-argocd.sh
-./add-dns.sh linux
 ```
 
-# installation using vagrant
+### Option 2: Kind auf WSL
 
-## create vm
-* vagrant up
-
-## ssh into vm
-* vagrant ssh
-
-## create kind kubernetes cluster
-* kind create cluster
-
-## or create kind cluster with config for all services (calico + istio)
-* sh setup-kind.sh
-* see: https://github.com/wlanboy/vagrantkind/blob/main/setup-kind.sh
-
-## destroy kind kubernetes cluster
-* kind delete clusters kindcluster
-
-## example log for cluster creation
-```
-vagrant@kind:~$ kind create cluster
-Creating cluster "kind" ...
- ✓ Ensuring node image (kindest/node:v1.21.1) 🖼
- ✓ Preparing nodes 📦
- ✓ Writing configuration 📜
- ✓ Starting control-plane 🕹️
- ✓ Installing CNI 🔌
- ✓ Installing StorageClass 💾
-Set kubectl context to "kind-kind"
-You can now use your cluster with:
-
-kubectl cluster-info --context kind-kind
+```bash
+./install-wsl-kind.sh
+./install-istio.sh
+./install-certmanager.sh
+./install-argocd.sh
 ```
 
-## get basic cluster information
-* kubectl cluster-info --context kind-kind
-```
-vagrant@kind:~$ kubectl cluster-info --context kind-kind
-Kubernetes control plane is running at https://127.0.0.1:40239
-CoreDNS is running at https://127.0.0.1:40239/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+### Option 3: K3s auf Linux
 
-To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
-```
-* kubectl get nodes
-```
-vagrant@kind:~$ kubectl get nodes
-NAME                 STATUS   ROLES                  AGE     VERSION
-kind-control-plane   Ready    control-plane,master   4m10s   v1.21.1
-```
-* kubectl get pods --all-namespaces
-```
-vagrant@kind:~$ kubectl get pods --all-namespaces
-NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
-kube-system          coredns-558bd4d5db-c97b5                     1/1     Running   0          4m
-kube-system          coredns-558bd4d5db-vgdhk                     1/1     Running   0          4m
-kube-system          etcd-kind-control-plane                      1/1     Running   0          4m9s
-kube-system          kindnet-5lg65                                1/1     Running   0          4m1s
-kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          4m9s
-kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          4m16s
-kube-system          kube-proxy-5gv5b                             1/1     Running   0          4m1s
-kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          4m9s
-local-path-storage   local-path-provisioner-547f784dff-gbhsc      1/1     Running   0          4m
+```bash
+# Master-Node
+./install-local-k3s.sh
+
+# Weitere Worker-Nodes hinzufügen
+./install-local-k3s-node.sh <MASTER_IP>
+
+# Danach Istio, Cert-Manager und ArgoCD
+./install-istio.sh
+./install-certmanager.sh
+./install-argocd.sh
 ```
 
-## start deploying Spring Boot based Service
-* see: https://github.com/wlanboy/virtualbox-kubernets/blob/main/deploy-a-service.md
+## Skript-Referenz
 
-## Delete cluster
-* kind delete clusters kindcluster
+### Cluster-Installation
+
+| Skript | Beschreibung |
+|--------|--------------|
+| [install-local-kind.sh](install-local-kind.sh) | Erstellt einen Kind-Cluster auf Linux mit MetalLB |
+| [install-wsl-kind.sh](install-wsl-kind.sh) | Erstellt einen Kind-Cluster auf WSL mit MetalLB (angepasster IP-Pool) |
+| [install-local-k3s.sh](install-local-k3s.sh) | Installiert K3s als Master-Node mit MetalLB (ohne Traefik) |
+| [install-local-k3s-node.sh](install-local-k3s-node.sh) | Fügt einen Worker-Node zu einem bestehenden K3s-Cluster hinzu |
+
+### Komponenten-Installation
+
+| Skript | Beschreibung |
+|--------|--------------|
+| [install-istio.sh](install-istio.sh) | Installiert Istio Service Mesh via Helm (Base, Istiod, Ingress Gateway) inkl. Demo-Service |
+| [install-certmanager.sh](install-certmanager.sh) | Installiert Cert-Manager mit lokaler CA als ClusterIssuer (erwartet CA unter `/local-ca/`) |
+| [install-argocd.sh](install-argocd.sh) | Installiert ArgoCD via Helm mit Istio-Integration, Gateway und TLS-Zertifikat |
+| [install-longhorn.sh](install-longhorn.sh) | Installiert Longhorn Storage mit Istio-Integration |
+
+### Hilfs-Skripte
+
+| Skript | Beschreibung |
+|--------|--------------|
+| [install-kube-config.sh](install-kube-config.sh) | Holt die Kubeconfig von einem Remote-K3s-Server und merged sie lokal |
+
+## Komponenten-Versionen
+
+Die Tool-Versionen werden zentral in [versions.sh](versions.sh) definiert:
+
+- **Helm**: 3.19.4
+- **Kind**: 0.31.0
+- **Istio**: 1.28.2
+- **K9s**: 0.50.16
+- **ArgoCD CLI**: v3.2.3
+
+MetalLB-Version (0.15.2) ist in den Install-Skripten definiert.
+
+## Konfigurationsdateien
+
+### Kind Cluster-Konfiguration
+
+| Datei | Beschreibung |
+|-------|--------------|
+| [kind-local.yaml](kind-local.yaml) | Kind-Cluster-Konfiguration für Linux und WSL |
+
+Die Datei definiert einen Cluster mit Control-Plane und Worker-Node. Bei Bedarf anpassen:
+
+```yaml
+networking:
+  apiServerAddress: "127.0.0.1"  # Bei Remote-Zugriff: Host-IP eintragen
+  podSubnet: "192.168.0.0/16"    # Pod-Netzwerk
+```
+
+### MetalLB IP-Pool Konfiguration
+
+MetalLB benötigt einen IP-Pool aus dem Docker-Netzwerk. Die richtige Range ermitteln:
+
+```bash
+docker network inspect -f '{{.IPAM.Config}}' kind
+# Beispiel-Output: [{172.18.0.0/16  172.18.0.1 map[]}]
+```
+
+| Datei | IP-Range | Verwendung |
+|-------|----------|------------|
+| [metallb-pool.yaml](metallb-pool.yaml) | `172.18.100.10-172.18.100.100` | Linux Kind |
+| [wsl-metallb-pool.yaml](wsl-metallb-pool.yaml) | `172.18.0.100-172.18.0.150` | WSL Kind |
+| [metallb-pool-k3s.yaml](metallb-pool-k3s.yaml) | - | K3s Cluster |
+
+Die IP-Range muss im Subnetz des Docker-Netzwerks liegen, aber außerhalb des automatisch vergebenen Bereichs.
+
+**Anpassen der IP-Range:**
+
+```yaml
+# metallb-pool.yaml
+spec:
+  addresses:
+  - 172.18.100.10-172.18.100.100  # An eigenes Netzwerk anpassen
+```
+
+### L2 Advertisement
+
+| Datei | Pool-Referenz |
+|-------|---------------|
+| [metallb-adv.yaml](metallb-adv.yaml) | `first-pool` (für Linux) |
+| [wsl-metallb-adv.yaml](wsl-metallb-adv.yaml) | `wsl-pool` (für WSL) |
+
+## Hinweise
+
+### Cert-Manager
+
+Das Skript `install-certmanager.sh` erwartet eine lokale CA unter:
+- `/local-ca/ca.pem` (Zertifikat)
+- `/local-ca/ca.key` (Private Key)
+
+### Cluster löschen
+
+```bash
+# Kind
+kind delete clusters local
+
+# K3s
+sudo /usr/local/bin/k3s-uninstall.sh
+```

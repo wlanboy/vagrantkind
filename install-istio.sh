@@ -1,3 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+# Prüfen ob benötigte Tools vorhanden sind
+for cmd in helm kubectl; do
+    if ! command -v "$cmd" &>/dev/null; then
+        echo "Fehler: $cmd ist nicht installiert"
+        exit 1
+    fi
+done
+
 echo "Adding Istio Helm repository and updating..."
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 helm repo update
@@ -37,7 +48,12 @@ echo "Applying 'echo-service-istio.yaml' to deploy the demo service..."
 kubectl apply -f echo-service-istio.yaml
 echo "Demo service deployment initiated."
 
-# test
-curl -I -H "Host: demo.tp.lan" http://172.18.100.10/
-curl -I -H "Host: demo.tp.lan" http://192.168.178.200/
-curl -I -H "Host: demo.kube.lan" http://172.18.0.2:32024/
+echo "Warte auf Demo-Service Pods..."
+kubectl -n demo wait --for=condition=Ready --all pods --timeout=120s
+
+echo "Istio Installation abgeschlossen."
+
+# Manuelle Tests:
+# curl -I -H "Host: demo.tp.lan" http://172.18.100.10/
+# curl -I -H "Host: demo.tp.lan" http://192.168.178.200/
+# curl -I -H "Host: demo.kube.lan" http://172.18.0.2:32024/
