@@ -9,10 +9,12 @@ data:
     [mariadb]
     log-bin
     log-basename=mariadb-data
+    binlog-format=ROW
 
   replica.cnf: |
     [mariadb]
     log-basename=mariadb-data
+    read-only=1
 
   primary.sql: |
     CREATE USER 'repluser'@'%' IDENTIFIED BY 'replsecret';
@@ -20,8 +22,9 @@ data:
     CREATE DATABASE primary_db;
 
   secondary.sql: |
-    CHANGE MASTER TO 
-    MASTER_HOST='mariadb-statefullset-0.mariadb-service.database-statefull.svc.cluster.local',
+    CHANGE MASTER TO
+    MASTER_HOST='mariadb-statefulset-0.mariadb-service.database-stateful.svc.cluster.local',
     MASTER_USER='repluser',
     MASTER_PASSWORD='replsecret',
     MASTER_CONNECT_RETRY=10;
+    START REPLICA;

@@ -1,105 +1,154 @@
-# Install mariadb replica cluster
-Kubectl commands to install a mariadb replica cluster in kubernetes.
+# MariaDB Replica Cluster Deployment
 
-## create namespace
-```
-kubectl create namespace database-statefull
-```
+Kubernetes StatefulSet-Deployment für einen MariaDB Primary-Replica Cluster mit automatischer Replikation.
 
-## Create configuration and storage
-```
-kubectl apply -f configurations.yaml -n database-statefull
-kubectl apply -f secrets.yaml -n database-statefull
-kubectl apply -f service.yaml -n database-statefull
-```
+## Voraussetzungen
 
-## create statefullset
-```
-kubectl apply -f statefullset.yaml -n database-statefull
-```
+- Kubernetes Cluster (z.B. kind, minikube)
+- kubectl konfiguriert
+- StorageClass für dynamisches PVC-Provisioning
 
-## get service information
-```
-kubectl get sts mariadb-statefullset -n database-statefull -o wide
-NAME                   READY   AGE   CONTAINERS   IMAGES
-mariadb-statefullset   2/2     71s   mariadb      mariadb:11.4
+## Architektur
 
-kubectl get pods -n database-statefull -o wide
-NAME                     READY   STATUS    RESTARTS   AGE     IP           NODE          NOMINATED NODE   READINESS GATES
-mariadb-statefullset-0   1/1     Running   0          3m15s   10.244.1.6   kind-worker   <none>           <none>
-mariadb-statefullset-1   1/1     Running   0          2m51s   10.244.1.8   kind-worker   <none>           <none>
+```
+┌─────────────────────┐     ┌─────────────────────┐
+│  mariadb-stateful-0 │────▶│  mariadb-stateful-1 │
+│      (Primary)      │     │      (Replica)      │
+│    Read/Write       │     │     Read-Only       │
+└─────────────────────┘     └─────────────────────┘
+          │                           │
+          └───────────┬───────────────┘
+                      │
+              mariadb-service
+              (Headless Service)
 ```
 
-## scale
-```
-kubectl scale sts mariadb-statefullset -n database-statefull --replicas=3
+## Komponenten
 
-kubectl get pods -n database-statefull -o wide
-NAME                     READY   STATUS    RESTARTS   AGE     IP            NODE          NOMINATED NODE   READINESS GATES
-mariadb-statefullset-0   1/1     Running   0          7m3s    10.244.1.6    kind-worker   <none>           <none>
-mariadb-statefullset-1   1/1     Running   0          6m39s   10.244.1.8    kind-worker   <none>           <none>
-mariadb-statefullset-2   1/1     Running   0          9s      10.244.1.10   kind-worker   <none>           <none>
-```
+| Datei | Beschreibung |
+|-------|--------------|
+| `statefullset.yaml` | StatefulSet mit Init-Container für Konfiguration |
+| `configurations.yaml` | ConfigMap mit Primary/Replica Konfiguration und Init-SQL |
+| `secrets.yaml` | Secret mit Root-Passwort |
+| `service.yaml` | Headless Service für Pod-Discovery |
 
-## connect to postgresql
-```
-kubectl exec -it mariadb-statefullset-0 -n database-statefull -- mariadb -uroot -psecret
+## Installation
 
-Defaulted container "mariadb" out of: mariadb, init-mariadb (init)
-Welcome to the MariaDB monitor.  Commands end with ; or \g.
-Your MariaDB connection id is 4
-Server version: 11.4.2-MariaDB-ubu2404-log mariadb.org binary distribution
+### 1. Namespace erstellen
 
-Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
-
-Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
-MariaDB [(none)]> 
-create database test;
-show databases;
-+--------------------+
-| Database           |
-+--------------------+
-| information_schema |
-| mysql              |
-| performance_schema |
-| primary_db         |
-| sys                |
-| test                |
-+--------------------+
-6 rows in set (0.001 sec)
-
-kubectl exec -it mariadb-statefullset-1 -n database-statefull -- mariadb -uroot -psecret
-
-Defaulted container "mariadb" out of: mariadb, init-mariadb (init)
-Welcome to the MariaDB monitor.  Commands end with ; or \g.
-Your MariaDB connection id is 4
-Server version: 11.4.2-MariaDB-ubu2404-log mariadb.org binary distribution
-
-Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
-
-Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
-MariaDB [(none)]> show databases;
-+--------------------+
-| Database           |
-+--------------------+
-| information_schema |
-| mysql              |
-| performance_schema |
-| primary_db         |
-| sys                |
-| test               |
-+--------------------+
-6 rows in set (0.001 sec)
+```bash
+kubectl create namespace database-stateful
 ```
 
-## delete everything
+### 2. Konfiguration und Secrets erstellen
+
+```bash
+kubectl apply -f configurations.yaml -n database-stateful
+kubectl apply -f secrets.yaml -n database-stateful
+kubectl apply -f service.yaml -n database-stateful
 ```
-kubectl delete service mariadb-service -n database-statefull
-kubectl delete sts mariadb-statefullset -n database-statefull
-kubectl delete configmap mariadb-configmap -n database-statefull
-kubectl delete secret mariadb-secret -n database-statefull
-kubectl get all -n database-statefull
-kubectl delete namespace database-statefull
+
+### 3. StatefulSet erstellen
+
+```bash
+kubectl apply -f statefullset.yaml -n database-stateful
 ```
+
+## Status prüfen
+
+```bash
+# StatefulSet Status
+kubectl get sts mariadb-statefulset -n database-stateful -o wide
+
+# Pod Status
+kubectl get pods -n database-stateful -o wide
+
+# Logs des Primary
+kubectl logs mariadb-statefulset-0 -n database-stateful
+
+# Logs des Replica
+kubectl logs mariadb-statefulset-1 -n database-stateful
+```
+
+## Skalieren
+
+```bash
+# Auf 3 Replicas skalieren
+kubectl scale sts mariadb-statefulset -n database-stateful --replicas=3
+
+# Status prüfen
+kubectl get pods -n database-stateful -o wide
+```
+
+## Verbindung testen
+
+### Mit Primary verbinden (Read/Write)
+
+```bash
+kubectl exec -it mariadb-statefulset-0 -n database-stateful -- mariadb -uroot -psecret
+```
+
+### Mit Replica verbinden (Read-Only)
+
+```bash
+kubectl exec -it mariadb-statefulset-1 -n database-stateful -- mariadb -uroot -psecret
+```
+
+### Replikationsstatus prüfen
+
+```bash
+# Auf dem Primary
+kubectl exec -it mariadb-statefulset-0 -n database-stateful -- mariadb -uroot -psecret -e "SHOW MASTER STATUS\G"
+
+# Auf dem Replica
+kubectl exec -it mariadb-statefulset-1 -n database-stateful -- mariadb -uroot -psecret -e "SHOW REPLICA STATUS\G"
+```
+
+## DNS-Namen
+
+Jeder Pod ist über einen stabilen DNS-Namen erreichbar:
+
+| Pod | DNS-Name |
+|-----|----------|
+| Primary | `mariadb-statefulset-0.mariadb-service.database-stateful.svc.cluster.local` |
+| Replica 1 | `mariadb-statefulset-1.mariadb-service.database-stateful.svc.cluster.local` |
+| Replica N | `mariadb-statefulset-N.mariadb-service.database-stateful.svc.cluster.local` |
+
+## Deinstallation
+
+```bash
+# StatefulSet und Service löschen
+kubectl delete -f statefullset.yaml -n database-stateful
+kubectl delete -f service.yaml -n database-stateful
+kubectl delete -f configurations.yaml -n database-stateful
+kubectl delete -f secrets.yaml -n database-stateful
+
+# PVCs löschen (Achtung: Datenverlust!)
+kubectl delete pvc -l app=mariadb -n database-stateful
+
+# Namespace löschen
+kubectl delete namespace database-stateful
+```
+
+## Konfiguration
+
+### Resource Limits
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 500m | 2 |
+| Memory | 512Mi | 1Gi |
+
+### Replikation
+
+- **Primary (Pod 0)**: Binlog aktiviert, Read/Write
+- **Replicas (Pod 1+)**: Read-Only, automatische Replikation vom Primary
+
+### Credentials
+
+| Benutzer | Passwort | Verwendung |
+|----------|----------|------------|
+| root | secret | Administration |
+| repluser | replsecret | Replikation |
+
+**Hinweis**: Für Produktionsumgebungen sichere Passwörter verwenden!
