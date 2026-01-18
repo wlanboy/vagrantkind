@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: mariadb
-        image: mariadb:11.4
+        image: mariadb:lts-ubi9
         ports:
         - containerPort: 3306
         env:
@@ -26,16 +26,18 @@ spec:
         - name: MARIADB_USER
           valueFrom:
             secretKeyRef:
-              name: mariadb-user-creds
+              name: mariadb-user
               key: username
         - name: MARIADB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mariadb-user-creds
+              name: mariadb-user
               key: password
         volumeMounts:
           - mountPath: /var/lib/mysql
             name: mariadb-storage
+          - mountPath: /etc/my.cnf.d
+            name: mariadb-config
         resources:
           limits:
             cpu: "2"
@@ -47,3 +49,6 @@ spec:
       - name: mariadb-storage
         persistentVolumeClaim:
           claimName: mariadb-pvc
+      - name: mariadb-config
+        configMap:
+          name: mariadb-config

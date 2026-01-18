@@ -1,64 +1,129 @@
-# Install mariadb
-Kubectl commands to install a mariadb instance in kubernetes.
+# MariaDB Single Instance Deployment
 
+Kubernetes-Deployment für eine einzelne MariaDB-Instanz mit persistentem Storage und benutzerdefinierter Konfiguration.
 
-## create namespace
-```
+## Voraussetzungen
+
+- Kubernetes Cluster (z.B. kind, minikube)
+- kubectl konfiguriert
+- LoadBalancer-Unterstützung (z.B. MetalLB für kind)
+
+## Komponenten
+
+| Datei | Beschreibung |
+|-------|--------------|
+| `deployment.yaml` | MariaDB Deployment mit Resource Limits |
+| `storage.yaml` | PersistentVolume und PersistentVolumeClaim |
+| `service.yaml` | LoadBalancer Service für externen Zugriff |
+| `my.cnf` | MariaDB Konfigurationsdatei |
+
+## Installation
+
+### 1. Namespace erstellen
+
+```bash
 kubectl create namespace database
 ```
 
-## Create configuration and storage
-```
-kubectl create -f storage.yaml -n database
+### 2. Storage erstellen
 
+```bash
+kubectl apply -f storage.yaml -n database
+```
+
+### 3. ConfigMap und Secrets erstellen
+
+```bash
+# MariaDB Konfiguration
 kubectl create configmap mariadb-config --from-file=my.cnf -n database
+
+# Root-Passwort (in Produktion sichere Werte verwenden!)
 kubectl create secret generic mariadb-root-password --from-literal=password=secret -n database
+
+# Benutzer-Credentials
 kubectl create secret generic mariadb-user --from-literal=username=user --from-literal=password=pass -n database
 ```
 
-## create instance
-```
-kubectl create -f deployment.yaml -n database
+### 4. Deployment erstellen
+
+```bash
+kubectl apply -f deployment.yaml -n database
 ```
 
-## expose instance with service
-```
-kubectl create -f service.yaml -n database
+### 5. Service erstellen
+
+```bash
+kubectl apply -f service.yaml -n database
 ```
 
-## get service information
-```
+## Verbindung testen
+
+### Service-Informationen abrufen
+
+```bash
 kubectl get svc mariadb -n database
+```
+
+Beispielausgabe:
+```
 NAME      TYPE           CLUSTER-IP   EXTERNAL-IP    PORT(S)          AGE
 mariadb   LoadBalancer   10.96.60.2   172.18.0.101   3306:32435/TCP   29s
 ```
 
-## connect to postgresql
-```
-kubectl exec -it mariadb-deployment-7969d49cb5-jk6tp -n database -- /bin/sh
+### Mit MariaDB verbinden
 
-$ mariadb --host 172.18.0.101 --port 3306 --user user --password
-Enter password: 
-Welcome to the MariaDB monitor.  Commands end with ; or \g.
-Your MariaDB connection id is 3
-Server version: 11.4.2-MariaDB-ubu2404 mariadb.org binary distribution
+```bash
+# Vom Pod aus
+kubectl exec -it deployment/mariadb-deployment -n database -- mariadb -u user -p
 
-Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
-
-Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
-MariaDB [(none)]> 
+# Von extern (mit MariaDB-Client installiert)
+mariadb --host <EXTERNAL-IP> --port 3306 --user user --password
 ```
 
-## delete everything
-```
-kubectl delete service mariadb -n database
-kubectl delete deployment mariadb-deployment -n database
-kubectl delete configmap mariadb-config -n database
-kubectl delete secret mariadb-root-password -n database
-kubectl delete secret mariadb-user -n database
-kubectl delete persistentvolumeclaim mariadb-pvc -n database
-kubectl delete persistentvolume mariadb-pv -n database
+## Status prüfen
+
+```bash
+# Pod-Status
+kubectl get pods -n database
+
+# Logs anzeigen
+kubectl logs deployment/mariadb-deployment -n database
+
+# Alle Ressourcen anzeigen
 kubectl get all -n database
+```
+
+## Deinstallation
+
+```bash
+# Ressourcen löschen
+kubectl delete -f service.yaml -n database
+kubectl delete -f deployment.yaml -n database
+kubectl delete configmap mariadb-config -n database
+kubectl delete secret mariadb-root-password mariadb-user -n database
+kubectl delete -f storage.yaml -n database
+
+# Namespace löschen
 kubectl delete namespace database
 ```
+
+## Konfiguration
+
+### Resource Limits
+
+Das Deployment verwendet folgende Limits (anpassbar in `deployment.yaml`):
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 1 | 2 |
+| Memory | 512Mi | 1Gi |
+
+### MariaDB Konfiguration
+
+Die `my.cnf` ist für ressourcenschonenden Betrieb optimiert. Wichtige Parameter:
+
+- `max_connections`: 10
+- `innodb_buffer_pool_size`: 10M
+- `bind-address`: 0.0.0.0 (alle Interfaces)
+
+Für Produktionsumgebungen sollten diese Werte erhöht werden.
