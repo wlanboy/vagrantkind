@@ -21,7 +21,12 @@ echo "IP: $LOKALE_IP"
 mkdir -p ~/.kube
 
 # K3s Installation
-curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_CHANNEL=stable INSTALL_K3S_EXEC="--disable=traefik --node-external-ip=$LOKALE_IP" sh -
+curl -sfL https://get.k3s.io -o /tmp/k3s-install.sh
+chmod +x /tmp/k3s-install.sh
+K3S_KUBECONFIG_MODE="644" \
+INSTALL_K3S_CHANNEL=stable \
+INSTALL_K3S_EXEC="--disable=traefik --node-external-ip=$LOKALE_IP" \
+/tmp/k3s-install.sh
 
 # Kubeconfig kopieren
 sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml

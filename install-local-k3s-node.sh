@@ -37,11 +37,12 @@ fi
 
 # k3s Agent installieren
 echo "Installiere K3s Agent und verbinde mit Master $MASTER_IP..."
-curl -sfL https://get.k3s.io | \
-  K3S_URL="https://${MASTER_IP}:6443" \
-  K3S_TOKEN="${NODE_TOKEN}" \
-  INSTALL_K3S_CHANNEL=stable \
-  INSTALL_K3S_EXEC="--node-external-ip=$LOKALE_IP" \
-  sh -
+curl -sfL https://get.k3s.io -o /tmp/k3s-install.sh
+chmod +x /tmp/k3s-install.sh
+K3S_URL="https://${MASTER_IP}:6443" \
+K3S_TOKEN="${NODE_TOKEN}" \
+INSTALL_K3S_CHANNEL=stable \
+INSTALL_K3S_EXEC="--node-external-ip=$LOKALE_IP" \
+/tmp/k3s-install.sh
 
 echo "Node erfolgreich zum Cluster hinzugefügt."
