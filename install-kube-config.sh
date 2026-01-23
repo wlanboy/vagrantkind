@@ -5,7 +5,7 @@ set -euo pipefail
 # 1. KONFIGURATION
 # ----------------------------------------------------------------------
 SSH_USER="${1:-$USER}"
-SERVER="${2:-gmk}"
+SERVER="${2:-gmkc}"
 REMOTE_K3S_PATH="/home/$SSH_USER/.kube/k3s.yaml"
 LOCAL_K3S_PATH="$HOME/.kube/k3s-remote-temp.yaml"
 LOCAL_KUBECONFIG="$HOME/.kube/config"
@@ -43,10 +43,14 @@ fi
 echo "   -> Datei erfolgreich nach $LOCAL_K3S_PATH geladen."
 
 # ----------------------------------------------------------------------
-# 3. KORRIGIEREN DES SERVER-EINTRAGS
+# 3. KORRIGIEREN DES SERVER-EINTRAGS UND NAMEN
 # ----------------------------------------------------------------------
 echo "3. Korrigiere den Server-Eintrag (127.0.0.1 zu $SERVER_IP)..."
 sed -i "s/127.0.0.1/$SERVER_IP/g" "$LOCAL_K3S_PATH"
+
+echo "   Benenne Cluster/Context/User um (default -> k3s-$SERVER)..."
+sed -i "s/: default$/: k3s-$SERVER/g" "$LOCAL_K3S_PATH"
+sed -i "s/name: default$/name: k3s-$SERVER/g" "$LOCAL_K3S_PATH"
 
 # ----------------------------------------------------------------------
 # 4. MERGEN DER KONFIGURATIONEN
@@ -68,7 +72,7 @@ echo "----------------------------------------------------"
 echo "Verfügbare Kontexte:"
 kubectl config get-contexts | grep -E 'CURRENT|k3s'
 
-NEW_CONTEXT=$(kubectl config get-contexts --no-headers 2>/dev/null | awk '{print $NF}' | grep -E 'k3s' | head -n 1 || true)
+NEW_CONTEXT=$(kubectl config get-contexts -o name 2>/dev/null | grep -E 'k3s' | head -n 1 || true)
 if [[ -n "$NEW_CONTEXT" ]]; then
     echo ""
     echo "Um den K3s-Cluster zu verwenden:"
