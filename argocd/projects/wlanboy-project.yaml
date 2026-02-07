@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: wlanboy
+  namespace: argocd
+spec:
+  description: Project for the wlanboy application
+
+  # Welche Git-Repos dürfen verwendet werden?
+  sourceRepos:
+    - https://github.com/wlanboy/MirrorService.git
+    - https://github.com/wlanboy/JavaHttpClient.git
+    - https://github.com/wlanboy/kubeeventjava.git
+    - https://github.com/wlanboy/randomfail.git
+
+  # Welche Cluster dürfen verwendet werden?
+  destinations:
+    - name: local
+      namespace: mirror
+    - name: local
+      namespace: javahttpclient
+    - name: local
+      namespace: kubeeventjava
+    - name: local
+      namespace: randomfail
+    - name: local
+      namespace: istio-ingress
+
+  clusterResourceWhitelist:
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+
+  # Automatische Sync-Policies erlauben
+  syncWindows: []
