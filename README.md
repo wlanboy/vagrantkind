@@ -32,7 +32,30 @@ Je nach Architektur eines der folgenden Skripte ausführen:
 
 ## Installation
 
-### Option 1: Kind auf Linux
+### Empfohlen: Interaktives Setup-Tool (Python)
+
+Das Python-Tool im Verzeichnis `tool/` fasst alle Schritte in einem interaktiven Setup zusammen:
+
+```bash
+cd tool
+python3 main.py
+```
+
+Das Tool fragt Umgebung (Linux/WSL), Hostname und IP-Adresse ab und führt automatisch alle Schritte aus:
+
+1. Prüfung und Installation benötigter CLI-Tools
+2. Lokale CA erstellen
+3. Kind Cluster erstellen (mit optionalem Löschen eines bestehenden Clusters)
+4. Istio installieren
+5. Cert-Manager installieren
+6. ArgoCD installieren
+7. DNS-Einträge in `/etc/hosts` konfigurieren
+
+Die Konfiguration wird in `tool/daten.json` gespeichert und bei erneutem Start als Default vorgeschlagen.
+
+### Manuelle Installation (Shell-Skripte)
+
+#### Option 1: Kind auf Linux
 
 ```bash
 ./install-local-kind.sh
@@ -41,7 +64,7 @@ Je nach Architektur eines der folgenden Skripte ausführen:
 ./install-argocd.sh
 ```
 
-### Option 2: Kind auf WSL
+#### Option 2: Kind auf WSL
 
 ```bash
 ./install-wsl-kind.sh
@@ -50,7 +73,7 @@ Je nach Architektur eines der folgenden Skripte ausführen:
 ./install-argocd.sh
 ```
 
-### Option 3: K3s auf Linux
+#### Option 3: K3s auf Linux
 
 ```bash
 # Master-Node
