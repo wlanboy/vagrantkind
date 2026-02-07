@@ -1,0 +1,77 @@
+# Default values for mariadb-single.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: mariadb
+  tag: lts-ubi9
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 3306
+
+resources:
+  limits:
+    cpu: "2"
+    memory: "1Gi"
+  requests:
+    cpu: "1"
+    memory: "512Mi"
+
+persistence:
+  enabled: true
+  storageClassName: "" # Set to default or a specific StorageClass if available
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  # hostPath: /mounts/ # Only for local testing with hostPath PV
+
+mariadb:
+  rootPassword: "secret" # In production, use a Kubernetes Secret!
+  user: "user"
+  password: "pass" # In production, use a Kubernetes Secret!
+  database: "mydatabase" # Optional: specify a default database to create
+
+config:
+  myCnf: |
+    [mysqld]
+    pid-file        = /var/run/mysqld/mysqld.pid
+    socket          = /var/run/mysqld/mysqld.sock
+    datadir         = /var/lib/mysql
+    skip-external-locking
+    bind-address = 0.0.0.0
+
+    # Instead of skip-networking the default is now to listen on localhost only.
+    # Comment the following if you want to allow remote connections.
+    # bind-address            = 127.0.0.1
+
+    key_buffer_size         = 16M
+    max_allowed_packet      = 16M
+    thread_stack            = 192K
+    thread_cache_size       = 8
+    # This replaces the old automatically calculated value of
+    # max_connections = 100 + (max_used_connections - 100) / 2
+    # which was too high for small machines.
+    max_connections        = 10
+    # automatically close connections after 10 minutes of inactivity
+    wait_timeout            = 600
+    interactive_timeout     = 600
+
+    innodb_buffer_pool_size = 10M
+    innodb_log_file_size    = 5M
+    innodb_log_buffer_size  = 8M
+    innodb_flush_log_at_trx_commit = 1
+    innodb_lock_wait_timeout = 50
+
+    [client]
+    port            = 3306
+    socket          = /var/run/mysqld/mysqld.sock
+
+    [mysqld_safe]
+    log-error=/var/log/mysqld.log
+    pid-file=/var/run/mysqld/mysqld.pid
+
+    !includedir /etc/my.cnf.d

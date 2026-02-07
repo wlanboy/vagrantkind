@@ -1,0 +1,31 @@
+Thank you for installing {{ include "mariadb-single.fullname" . }}.
+
+Your MariaDB instance has been deployed to your Kubernetes cluster.
+
+To connect to your MariaDB instance:
+
+1.  **Get the Service IP:**
+    ```bash
+    kubectl get svc {{ include "mariadb-single.fullname" . }} -n {{ .Release.Namespace }}
+    ```
+    Look for the `EXTERNAL-IP` (if using LoadBalancer) or `CLUSTER-IP` (if using ClusterIP).
+
+2.  **Connect from a Pod within the cluster:**
+    ```bash
+    kubectl exec -it deployment/{{ include "mariadb-single.fullname" . }} -n {{ .Release.Namespace }} -- mariadb -u {{ .Values.mariadb.user }} -p
+    # Enter password when prompted ({{ .Values.mariadb.password }})
+    ```
+
+3.  **Connect from outside the cluster (requires MariaDB client):**
+    ```bash
+    mariadb --host <EXTERNAL-IP_OR_CLUSTER-IP> --port {{ .Values.service.port }} --user {{ .Values.mariadb.user }} --password
+    # Enter password when prompted ({{ .Values.mariadb.password }})
+    ```
+
+    **NOTE:** For external access with `LoadBalancer` service type, ensure your Kubernetes cluster has a load balancer implementation (e.g., MetalLB for kind/minikube).
+
+4.  **Access root user (for administration):**
+    ```bash
+    kubectl exec -it deployment/{{ include "mariadb-single.fullname" . }} -n {{ .Release.Namespace }} -- mariadb -u root -p
+    # Enter password when prompted ({{ .Values.mariadb.rootPassword }})
+    ```
