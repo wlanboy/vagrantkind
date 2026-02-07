@@ -4,3 +4,4 @@ custom-resources.yaml
 mesh/cluster.yaml
 mesh/metallb-config.yaml
 mesh/grafana-configmap.yaml
+tool/__pycache__/
