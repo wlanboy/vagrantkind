@@ -88,6 +88,16 @@ Die Konfiguration wird in `tool/daten.json` gespeichert und bei erneutem Start a
 ./install-argocd.sh
 ```
 
+## ArgoCD Apps
+
+Das Python-Tool im Verzeichnis `argocd/` richtet interaktiv alle ArgoCD-Ressourcen ein (Cluster, Repository, Projekt, Namespaces und Applications). Es prueft vor jedem Schritt ob die Ressource bereits existiert und fragt per `[j/n]` nach.
+
+```bash
+python argocd/main.py
+```
+
+Details siehe [argocd/README.md](argocd/README.md).
+
 ## Skript-Referenz
 
 ### Cluster-Installation
