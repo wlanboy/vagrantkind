@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: randomfail
+  namespace: argocd
+spec:
+  project: wlanboy
+
+  source:
+    repoURL: https://github.com/wlanboy/randomfail.git
+    targetRevision: main
+    path: randomfail-chart
+    helm:
+      releaseName: randomfail
+      valueFiles:
+        - values.yaml
+
+  destination:
+    name: local
+    namespace: randomfail
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

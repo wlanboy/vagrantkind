@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: javahttpclient
+  namespace: argocd
+spec:
+  project: wlanboy
+
+  source:
+    repoURL: https://github.com/wlanboy/JavaHttpClient.git
+    targetRevision: main
+    path: javahttpclient-chart
+    helm:
+      releaseName: javahttpclient
+      valueFiles:
+        - values.yaml
+
+  destination:
+    name: local
+    namespace: javahttpclient
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

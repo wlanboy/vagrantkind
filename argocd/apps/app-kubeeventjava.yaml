@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubeeventjava
+  namespace: argocd
+spec:
+  project: wlanboy
+
+  source:
+    repoURL: https://github.com/wlanboy/kubeeventjava.git
+    targetRevision: main
+    path: kubeeventjava-chart
+    helm:
+      releaseName: kubeeventjava
+      valueFiles:
+        - values.yaml
+
+  destination:
+    name: local
+    namespace: kubeeventjava
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

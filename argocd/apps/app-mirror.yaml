@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mirror
+  namespace: argocd
+spec:
+  project: wlanboy
+
+  source:
+    repoURL: https://github.com/wlanboy/MirrorService.git
+    targetRevision: main
+    path: mirror-chart
+    helm:
+      releaseName: mirror
+      valueFiles:
+        - values.yaml
+
+  destination:
+    name: local
+    namespace: mirror
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
