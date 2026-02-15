@@ -14,11 +14,18 @@ sdk update
 sdk install java 25-tem
 sdk install maven 3.9.9
 
+# Install VSCode
+wget https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64 -O vscode.deb
 sudo apt-get update
 sudo apt-get install net-tools git nano htop 
+sudo apt install vscode.deb
 
-wget https://github.com/marktext/marktext/releases/latest/download/marktext-x86_64.AppImage
+# Create folders for apps and icons
 mkdir -p ~/Applications 
+mkdir $HOME/.share/icons
+
+# Install Marktext
+wget https://github.com/marktext/marktext/releases/latest/download/marktext-x86_64.AppImage
 mv marktext-x86_64.AppImage ~/Applications/
 chmod +x ~/Applications/marktext-x86_64.AppImage
 
@@ -41,9 +48,13 @@ Terminal=false
 EOF
 echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
 
+wget "https://github.com/marktext/marktext/blob/develop/resources/icons/icon.png?raw=true" \
+     -O ~/.local/share/icons/marktext.png
+
 wget https://lmstudio.ai/download/latest/linux/x64
 mv LM-Studio-0.4.2-2-x64.AppImage ~/Applications/
 chmod +x ~/Applications/LM-Studio-0.4.2-2-x64.AppImage
+
 # Zielpfad für die .desktop-Datei
 DESKTOP_FILE="$HOME/.local/share/applications/lmstudio.desktop"
 # Pfad zur AppImage-Datei (anpassbar)
@@ -63,11 +74,8 @@ Terminal=false
 EOF
 echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
 
-mkdir $HOME/.share/icons
-wget "https://github.com/marktext/marktext/blob/develop/resources/icons/icon.png?raw=true" \
-     -O ~/.local/share/icons/marktext.png
-
 wget "https://lmstudio.ai/assets/android-chrome-512x512.png" \
      -O ~/.local/share/icons/lmstudio.png
 
+# Update Desktop Database
 update-desktop-database ~/.local/share/applications/
