@@ -40,12 +40,14 @@ touch "$DESKTOP_FILE"
 cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Name=MarkText
-Exec=$APPIMAGE_PATH
+Exec="$APPIMAGE_PATH" --no-sandbox
 Icon=marktext
 Type=Application
 Categories=Utility;TextEditor;
 Terminal=false
 EOF
+
+chmod +x $DESKTOP_FILE
 echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
 
 wget "https://github.com/marktext/marktext/blob/develop/resources/icons/icon.png?raw=true" \
@@ -66,12 +68,14 @@ touch "$DESKTOP_FILE"
 cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Name=LM Studio
-Exec=$APPIMAGE_PATH
+Exec="$APPIMAGE_PATH" --no-sandbox
 Icon=lmstudio
 Type=Application
 Categories=Utility;Development;
 Terminal=false
 EOF
+
+chmod +x $DESKTOP_FILE
 echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
 
 wget "https://lmstudio.ai/assets/android-chrome-512x512.png" \
