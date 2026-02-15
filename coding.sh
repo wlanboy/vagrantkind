@@ -17,7 +17,7 @@ sdk install maven 3.9.9
 # Install VSCode
 wget https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64 -O vscode.deb
 sudo apt-get update
-sudo apt-get install net-tools git nano htop 
+sudo apt-get install net-tools git nano htop alacritty
 sudo apt install vscode.deb
 
 # Create folders for apps and icons
