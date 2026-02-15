@@ -19,7 +19,7 @@ sudo apt-get install net-tools git nano htop
 
 wget https://github.com/marktext/marktext/releases/latest/download/marktext-x86_64.AppImage
 mkdir -p ~/Applications 
-mv /marktext-x86_64.AppImage ~/Applications/
+mv marktext-x86_64.AppImage ~/Applications/
 chmod +x ~/Applications/marktext-x86_64.AppImage
 
 # Zielpfad für die .desktop-Datei
@@ -40,3 +40,27 @@ Categories=Utility;TextEditor;
 Terminal=false
 EOF
 echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
+
+wget https://lmstudio.ai/download/latest/linux/x64
+mv LM-Studio-0.4.2-2-x64.AppImage ~/Applications/
+chmod +x ~/Applications/LM-Studio-0.4.2-2-x64.AppImage
+# Zielpfad für die .desktop-Datei
+DESKTOP_FILE="$HOME/.local/share/applications/lmstudio.desktop"
+# Pfad zur AppImage-Datei (anpassbar)
+APPIMAGE_PATH="$HOME/Applications/LM-Studio-0.4.2-2-x64.AppImage"
+# Datei erstellen
+mkdir -p "$(dirname "$DESKTOP_FILE")"
+touch "$DESKTOP_FILE"
+# Inhalt einfügen
+cat > "$DESKTOP_FILE" <<EOF
+[Desktop Entry]
+Name=LM Studio
+Exec=$APPIMAGE_PATH
+Icon=lmstudio
+Type=Application
+Categories=Utility;Development;
+Terminal=false
+EOF
+echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
+
+update-desktop-database ~/.local/share/applications/
