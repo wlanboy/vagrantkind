@@ -16,3 +16,6 @@ sdk install maven 3.9.9
 
 sudo apt-get update
 sudo apt-get install net-tools git nano htop 
+
+wget https://github.com/marktext/marktext/releases/latest/download/marktext-x86_64.AppImage
+chmod +x marktext-x86_64.AppImage
