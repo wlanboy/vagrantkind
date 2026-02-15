@@ -63,4 +63,11 @@ Terminal=false
 EOF
 echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
 
+mkdir $HOME/.share/icons
+wget "https://github.com/marktext/marktext/blob/develop/resources/icons/icon.png?raw=true" \
+     -O ~/.local/share/icons/marktext.png
+
+wget "https://lmstudio.ai/assets/android-chrome-512x512.png" \
+     -O ~/.local/share/icons/lmstudio.png
+
 update-desktop-database ~/.local/share/applications/
