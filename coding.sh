@@ -18,4 +18,25 @@ sudo apt-get update
 sudo apt-get install net-tools git nano htop 
 
 wget https://github.com/marktext/marktext/releases/latest/download/marktext-x86_64.AppImage
-chmod +x marktext-x86_64.AppImage
+mkdir -p ~/Applications 
+mv /marktext-x86_64.AppImage ~/Applications/
+chmod +x ~/Applications/marktext-x86_64.AppImage
+
+# Zielpfad für die .desktop-Datei
+DESKTOP_FILE="$HOME/.local/share/applications/marktext.desktop"
+# Pfad zur AppImage-Datei (anpassbar)
+APPIMAGE_PATH="$HOME/Applications/marktext-x86_64.AppImage"
+# Datei erstellen
+mkdir -p "$(dirname "$DESKTOP_FILE")"
+touch "$DESKTOP_FILE"
+# Inhalt einfügen
+cat > "$DESKTOP_FILE" <<EOF
+[Desktop Entry]
+Name=MarkText
+Exec=$APPIMAGE_PATH
+Icon=marktext
+Type=Application
+Categories=Utility;TextEditor;
+Terminal=false
+EOF
+echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
