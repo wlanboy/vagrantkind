@@ -18,9 +18,14 @@ Je nach Architektur eines der folgenden Skripte ausführen:
 
 | Skript | Beschreibung |
 |--------|--------------|
+| Skript | Beschreibung |
+|--------|--------------|
 | [amd64-tools.sh](amd64-tools.sh) | Installiert kubectl, helm, kind, istioctl, k9s, argocd-cli, hey und mirrord für x86_64 Systeme |
 | [arm64-tools.sh](arm64-tools.sh) | Installiert kubectl, helm, kind und istioctl für ARM64 Systeme |
 | [versions.sh](versions.sh) | Zentrale Versionsverwaltung für alle Tools |
+| [whelper.sh](whelper.sh) | Hilfsfunktionen für Installations-Checks (Version, Existenz, apt, sdkman) |
+
+Alle Installationsskripte prüfen vor jedem Schritt, ob das Tool bereits in der gewünschten Version installiert ist, und überspringen es gegebenenfalls.
 
 ```bash
 # Für x86_64 / amd64
@@ -29,6 +34,41 @@ Je nach Architektur eines der folgenden Skripte ausführen:
 # Für ARM64
 ./arm64-tools.sh
 ```
+
+### Entwicklungsumgebung einrichten
+
+```bash
+./coding.sh
+```
+
+Installiert (mit Existenz-/Versions-Check): apt-Pakete (git, nano, htop, alacritty, ...), uv, sdkman, Java, Maven, VSCode, MarkText und LM Studio.
+
+### Container-Runtime installieren
+
+```bash
+# Docker
+./docker.sh
+
+# Podman (Rootless-Setup)
+./podman.sh
+```
+
+`podman.sh` richtet ein vollständiges Rootless-Setup ein: subuid/subgid, fuse-overlayfs Storage, Registry-Konfiguration, unprivilegierte Ports ab 80, Netzwerk-Backend (pasta/slirp4netns), Podman-Socket und Lingering.
+
+### Versionen aktualisieren
+
+```bash
+# Prüfen welche Updates verfügbar sind (Dry-Run)
+./versionsupdate.sh
+
+# Updates anwenden
+./versionsupdate.sh --apply
+
+# Bestimmte Tools überspringen
+./versionsupdate.sh --apply --skip=helm,istio
+```
+
+Ermittelt die neuesten Versionen über die GitHub API und aktualisiert [versions.sh](versions.sh). Verfügbare Tools: `helm`, `kind`, `istio`, `k9s`, `argocd`.
 
 ## Installation
 
@@ -123,16 +163,25 @@ Details siehe [argocd/README.md](argocd/README.md).
 | Skript | Beschreibung |
 |--------|--------------|
 | [install-kube-config.sh](install-kube-config.sh) | Holt die Kubeconfig von einem Remote-K3s-Server und merged sie lokal |
+| [versionsupdate.sh](versionsupdate.sh) | Prüft auf neue Tool-Versionen und aktualisiert versions.sh |
+| [whelper.sh](whelper.sh) | Hilfsfunktionen für Installations-Checks |
+| [docker.sh](docker.sh) | Installiert Docker CE mit Existenz-Check |
+| [podman.sh](podman.sh) | Installiert Podman mit vollständigem Rootless-Setup |
+| [coding.sh](coding.sh) | Richtet Entwicklungsumgebung ein (Java, Maven, VSCode, etc.) |
 
 ## Komponenten-Versionen
 
 Die Tool-Versionen werden zentral in [versions.sh](versions.sh) definiert:
 
-- **Helm**: 3.19.4
+- **Helm**: 3.20
 - **Kind**: 0.31.0
-- **Istio**: 1.28.2
-- **K9s**: 0.50.16
-- **ArgoCD CLI**: v3.2.3
+- **Istio**: 1.28.3
+- **K9s**: 0.50.18
+- **ArgoCD CLI**: v3.3.0
+- **Java**: 25-tem (Temurin, via sdkman)
+- **Maven**: 3.9.9 (via sdkman)
+
+Versionen können mit `./versionsupdate.sh` automatisch auf den neuesten Stand gebracht werden.
 
 MetalLB-Version (0.15.2) ist in den Install-Skripten definiert.
 
