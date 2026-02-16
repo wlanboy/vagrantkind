@@ -1,5 +1,8 @@
 #!/bin/bash
 
+sudo apt-get update
+sudo apt-get install net-tools git nano htop alacritty curl libfuse2t64
+
 # Installiere uv
 curl -LsSf https://astral.sh/uv/install.sh | bash
 
@@ -15,14 +18,13 @@ sdk install java 25-tem
 sdk install maven 3.9.9
 
 # Install VSCode
-wget https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64 -O vscode.deb
-sudo apt-get update
-sudo apt-get install net-tools git nano htop alacritty
+wget "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" -O vscode.deb
+
 sudo apt install vscode.deb
 
 # Create folders for apps and icons
-mkdir -p ~/Applications 
-mkdir $HOME/.share/icons
+mkdir -p $HOME/Applications 
+mkdir -p $HOME/.local/share/icons
 
 # Install Marktext
 wget https://github.com/marktext/marktext/releases/latest/download/marktext-x86_64.AppImage
@@ -55,14 +57,14 @@ echo "Desktop-Datei erstellt unter: $DESKTOP_FILE"
 wget "https://github.com/marktext/marktext/blob/develop/resources/icons/icon.png?raw=true" \
      -O ~/.local/share/icons/marktext.png
 
-wget https://lmstudio.ai/download/latest/linux/x64
-mv LM-Studio-0.4.2-2-x64.AppImage ~/Applications/
-chmod +x ~/Applications/LM-Studio-0.4.2-2-x64.AppImage
+wget "https://lmstudio.ai/download/latest/linux/x64" -O LM-Studio.AppImage
+mv LM-Studio.AppImage ~/Applications/
+chmod +x ~/Applications/LM-Studio.AppImage
 
 # Zielpfad für die .desktop-Datei
 DESKTOP_FILE="$HOME/.local/share/applications/lmstudio.desktop"
 # Pfad zur AppImage-Datei (anpassbar)
-APPIMAGE_PATH="$HOME/Applications/LM-Studio-0.4.2-2-x64.AppImage"
+APPIMAGE_PATH="$HOME/Applications/LM-Studio.AppImage"
 # Datei erstellen
 mkdir -p "$(dirname "$DESKTOP_FILE")"
 touch "$DESKTOP_FILE"
