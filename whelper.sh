@@ -17,8 +17,39 @@ installed_version() {
     argocd)    argocd version --client -o json 2>/dev/null | grep -oP '"Version":\s*"v?\K[^"]+' ;;
     hey)       echo "installed" ;;
     mirrord)   mirrord --version 2>/dev/null | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' ;;
+    uv)        uv --version 2>/dev/null | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' ;;
+    code)      code --version 2>/dev/null | head -1 ;;
     *)         echo "" ;;
   esac
+}
+
+# Prüft ob ein apt-Paket installiert ist
+is_apt_installed() {
+  dpkg -s "$1" &>/dev/null
+}
+
+# Prüft ob eine SDK-Candidate-Version installiert ist (sdkman)
+sdk_need_install() {
+  local candidate="$1"
+  local want="$2"
+  if [ ! -d "$HOME/.sdkman/candidates/$candidate/$want" ]; then
+    echo "  $candidate $want ist nicht installiert -> wird installiert"
+    return 0
+  fi
+  echo "  $candidate $want ist bereits installiert -> übersprungen"
+  return 1
+}
+
+# Prüft ob eine Datei/AppImage existiert
+need_file() {
+  local path="$1"
+  local name="$2"
+  if [ -f "$path" ]; then
+    echo "  $name ist bereits vorhanden -> übersprungen"
+    return 1
+  fi
+  echo "  $name ist nicht vorhanden -> wird installiert"
+  return 0
 }
 
 need_install() {
