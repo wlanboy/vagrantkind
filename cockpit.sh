@@ -42,8 +42,23 @@ sudo apt install -y cockpit cockpit-machines
 echo "=== Cockpit aktivieren ==="
 sudo systemctl enable --now cockpit.socket
 
+echo "=== libvirtd.conf: Socket-Berechtigungen setzen ==="
+LIBVIRTD_CONF="/etc/libvirt/libvirtd.conf"
+for key in \
+    unix_sock_group \
+    unix_sock_ro_perms \
+    unix_sock_rw_perms \
+    unix_sock_admin_perms \
+    unix_sock_dir; do
+    sudo sed -i "s|^#\s*\(${key}\s*=.*\)|\1|" "$LIBVIRTD_CONF"
+done
+echo "Fertig – betroffene Zeilen in $LIBVIRTD_CONF:"
+grep -E "^(unix_sock_group|unix_sock_ro_perms|unix_sock_rw_perms|unix_sock_admin_perms|unix_sock_dir)" "$LIBVIRTD_CONF"
+
 echo "=== libvirtd aktivieren ==="
 sudo systemctl enable --now libvirtd
+sudo systemctl daemon-reload
+sudo systemctl restart libvirtd
 
 echo "=== Firewall-Regeln setzen (falls UFW aktiv ist) ==="
 if sudo ufw status | grep -q "Status: active"; then
