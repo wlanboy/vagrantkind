@@ -46,8 +46,18 @@ else
 fi
 
 echo "=== Benutzer zur libvirt- und kvm-Gruppe hinzufügen ==="
-sudo usermod -aG libvirt "$USER"
-sudo usermod -aG kvm "$USER"
+if groups "$USER" | grep -q '\blibvirt\b'; then
+    echo "  $USER ist bereits in der libvirt-Gruppe -> übersprungen"
+else
+    echo "  $USER wird zur libvirt-Gruppe hinzugefügt"
+    sudo usermod -aG libvirt "$USER"
+fi
+if groups "$USER" | grep -q '\bkvm\b'; then
+    echo "  $USER ist bereits in der kvm-Gruppe -> übersprungen"
+else
+    echo "  $USER wird zur kvm-Gruppe hinzugefügt"
+    sudo usermod -aG kvm "$USER"
+fi
 
 echo "=== libvirtd.conf: Socket-Berechtigungen setzen ==="
 LIBVIRTD_CONF="/etc/libvirt/libvirtd.conf"
