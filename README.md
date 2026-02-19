@@ -1,12 +1,12 @@
 # Kubernetes Cluster Setup
 
-Dieses Repository enthält Skripte zum Aufbau eines lokalen Kubernetes-Clusters mit MetalLB, Istio, Cert-Manager und ArgoCD.
+Dieses Repository enthält Skripte zum Aufbau eines lokalen Kubernetes-Clusters mit MetalLB, Istio, Cert-Manager und ArgoCD, sowie zur Einrichtung von KVM-Virtualisierung.
 
 ## Unterstützte Plattformen
 
 - **Kind** auf Linux
 - **Kind** auf WSL (Windows Subsystem for Linux)
-- **K3s** auf Linux (Single-Node oder Multi-Node)
+- **K3s** auf Linux (Single-Node oder Multi-Node, mit Flannel+MetalLB oder Cilium)
 
 ## Voraussetzungen
 
@@ -16,8 +16,6 @@ Vor der Cluster-Installation müssen die benötigten CLI-Tools installiert werde
 
 Je nach Architektur eines der folgenden Skripte ausführen:
 
-| Skript | Beschreibung |
-|--------|--------------|
 | Skript | Beschreibung |
 |--------|--------------|
 | [amd64-tools.sh](amd64-tools.sh) | Installiert kubectl, helm, kind, istioctl, k9s, argocd-cli, hey und mirrord für x86_64 Systeme |
@@ -70,6 +68,34 @@ Installiert (mit Existenz-/Versions-Check): apt-Pakete (git, nano, htop, alacrit
 
 Ermittelt die neuesten Versionen über die GitHub API und aktualisiert [versions.sh](versions.sh). Verfügbare Tools: `helm`, `kind`, `istio`, `k9s`, `argocd`.
 
+## KVM-Virtualisierung
+
+Für den Betrieb von VMs auf dem Host stehen eigene Skripte bereit.
+
+### KVM / libvirt installieren
+
+```bash
+./kvm-libvirt.sh
+```
+
+Installiert QEMU/KVM, libvirt, bridge-utils, cloud-init-Tools und libguestfs. Fügt den aktuellen Benutzer den Gruppen `libvirt` und `kvm` hinzu, aktiviert Socket-Berechtigungen in `/etc/libvirt/libvirtd.conf` und startet `libvirtd`. `virt-manager` wird nur bei erkanntem Desktop-Manager installiert. Nach der Installation ist ein Neustart empfohlen, damit Gruppenrechte aktiv werden.
+
+### Cockpit (Browser-UI) installieren
+
+```bash
+./kvm-cockpit.sh
+```
+
+Installiert Cockpit mit dem `cockpit-machines`-Plugin für die KVM-Verwaltung im Browser. Öffnet bei aktivem UFW automatisch Port 9090. Nach der Installation erreichbar unter `https://<HOST-IP>:9090`.
+
+### libvirt/Docker Forwarding-Fix
+
+```bash
+sudo ./fix-libvirt-forwaring.sh
+```
+
+Behebt einen häufigen Konflikt zwischen Docker und libvirt: Docker setzt in der `FORWARD`-Chain und `DOCKER-USER`-Chain DROP-Regeln, die den Netzwerkverkehr über libvirt-Bridges (`virbr0`, `br0`) blockieren. Das Skript fügt die nötigen ACCEPT-Regeln ein und setzt `net.ipv4.conf.<bridge>.forwarding=1`. Muss als root ausgeführt werden und sollte nach jedem Docker- oder libvirt-Neustart erneut ausgeführt werden (die Regeln sind nicht persistent).
+
 ## Installation
 
 ### Empfohlen: Interaktives Setup-Tool (Python)
@@ -113,7 +139,7 @@ Die Konfiguration wird in `tool/daten.json` gespeichert und bei erneutem Start a
 ./install-argocd.sh
 ```
 
-#### Option 3: K3s auf Linux
+#### Option 3: K3s auf Linux (Flannel + MetalLB)
 
 ```bash
 # Master-Node
@@ -123,6 +149,20 @@ Die Konfiguration wird in `tool/daten.json` gespeichert und bei erneutem Start a
 ./install-local-k3s-node.sh <MASTER_IP>
 
 # Danach Istio, Cert-Manager und ArgoCD
+./install-istio.sh
+./install-certmanager.sh
+./install-argocd.sh
+```
+
+#### Option 4: K3s auf Linux mit Cilium CNI
+
+```bash
+./install-local-k3s-cilium.sh
+```
+
+Installiert K3s ohne Flannel und ohne Traefik. Cilium übernimmt das CNI und stellt via **L2 Announcements** und **LB-IPAM** einen integrierten Load Balancer bereit (kein MetalLB nötig). Der IP-Pool ist auf `192.168.178.230–192.168.178.240` voreingestellt und kann direkt im Skript angepasst werden. Anschließend können Istio, Cert-Manager und ArgoCD wie gewohnt installiert werden:
+
+```bash
 ./install-istio.sh
 ./install-certmanager.sh
 ./install-argocd.sh
@@ -148,6 +188,7 @@ Details siehe [argocd/README.md](argocd/README.md).
 | [install-wsl-kind.sh](install-wsl-kind.sh) | Erstellt einen Kind-Cluster auf WSL mit MetalLB (angepasster IP-Pool) |
 | [install-local-k3s.sh](install-local-k3s.sh) | Installiert K3s als Master-Node mit MetalLB (ohne Traefik) |
 | [install-local-k3s-node.sh](install-local-k3s-node.sh) | Fügt einen Worker-Node zu einem bestehenden K3s-Cluster hinzu |
+| [install-local-k3s-cilium.sh](install-local-k3s-cilium.sh) | Installiert K3s ohne Flannel, mit Cilium als CNI und L2 Load Balancer |
 
 ### Komponenten-Installation
 
@@ -157,6 +198,14 @@ Details siehe [argocd/README.md](argocd/README.md).
 | [install-certmanager.sh](install-certmanager.sh) | Installiert Cert-Manager mit lokaler CA als ClusterIssuer (erwartet CA unter `/local-ca/`) |
 | [install-argocd.sh](install-argocd.sh) | Installiert ArgoCD via Helm mit Istio-Integration, Gateway und TLS-Zertifikat |
 | [install-longhorn.sh](install-longhorn.sh) | Installiert Longhorn Storage mit Istio-Integration |
+
+### KVM / Virtualisierung
+
+| Skript | Beschreibung |
+|--------|--------------|
+| [kvm-libvirt.sh](kvm-libvirt.sh) | Installiert KVM, QEMU, libvirt, cloud-init-Tools; konfiguriert Gruppen und Socket-Rechte |
+| [kvm-cockpit.sh](kvm-cockpit.sh) | Installiert Cockpit mit cockpit-machines für Browser-basierte KVM-Verwaltung (Port 9090) |
+| [fix-libvirt-forwaring.sh](fix-libvirt-forwaring.sh) | Setzt iptables-Regeln, damit Docker das Forwarding für libvirt-Bridges nicht blockiert |
 
 ### Hilfs-Skripte
 
@@ -171,19 +220,11 @@ Details siehe [argocd/README.md](argocd/README.md).
 
 ## Komponenten-Versionen
 
-Die Tool-Versionen werden zentral in [versions.sh](versions.sh) definiert:
-
-- **Helm**: 3.20
-- **Kind**: 0.31.0
-- **Istio**: 1.28.3
-- **K9s**: 0.50.18
-- **ArgoCD CLI**: v3.3.0
-- **Java**: 25-tem (Temurin, via sdkman)
-- **Maven**: 3.9.9 (via sdkman)
+Die Tool-Versionen werden zentral in [versions.sh](versions.sh) definiert.
 
 Versionen können mit `./versionsupdate.sh` automatisch auf den neuesten Stand gebracht werden.
 
-MetalLB-Version (0.15.2) ist in den Install-Skripten definiert.
+MetalLB-Version (0.15.2) ist in den Install-Skripten definiert. Die Cilium-Version ist in [install-local-k3s-cilium.sh](install-local-k3s-cilium.sh) direkt als Variable (`CILIUM_VERSION`) hinterlegt.
 
 ## Konfigurationsdateien
 
