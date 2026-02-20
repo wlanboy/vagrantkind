@@ -208,8 +208,11 @@ metadata:
   namespace: argocd
 rules:
   - apiGroups: [argoproj.io]
-    resources: [eventsources, sensors]
+    resources: [eventsources, sensors, workflows, workflowtemplates, cronworkflows, workfloweventbindings, workflowtaskresults]
     verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [get, list, watch]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
