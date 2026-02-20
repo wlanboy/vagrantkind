@@ -199,6 +199,33 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 EOF
 
+echo "Erstelle RBAC fuer workflow-sa im argocd Namespace..."
+kubectl apply -f - <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: workflow-sa-role
+  namespace: argocd
+rules:
+  - apiGroups: [argoproj.io]
+    resources: [eventsources, sensors]
+    verbs: [get, list, watch, create, update, patch, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: workflow-sa-role-binding
+  namespace: argocd
+subjects:
+  - kind: ServiceAccount
+    name: workflow-sa
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: workflow-sa-role
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
 echo "Erstelle ServiceAccount Token..."
 kubectl apply -f - <<EOF
 apiVersion: v1
