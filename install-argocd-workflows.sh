@@ -11,13 +11,13 @@ fi
 read -rsp "Docker Password: " DOCKER_PASSWORD
 echo
 
+kubectl delete secret regcred -n argocd --ignore-not-found
 kubectl create secret docker-registry regcred \
   --docker-server=https://index.docker.io/v1/ \
   --docker-username="${DOCKER_USERNAME}" \
   --docker-password="${DOCKER_PASSWORD}" \
   --docker-email="${DOCKER_EMAIL}" \
-  -n argocd \
-  --dry-run=client -o yaml | kubectl apply -f -
+  -n argocd
 
 echo "Erstelle Argo Workflows Certificate..."
 kubectl apply -f - <<EOF
