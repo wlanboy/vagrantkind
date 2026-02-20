@@ -8,6 +8,10 @@ if ! helm status argo-workflows --namespace argocd &>/dev/null; then
   helm install argo-workflows argo/argo-workflows --namespace argocd
 fi
 
+if ! helm status argo-events --namespace argocd &>/dev/null; then
+  helm install argo-events argo/argo-events --namespace argocd
+fi
+
 read -rsp "Docker Password: " DOCKER_PASSWORD
 echo
 
