@@ -8,7 +8,6 @@ spec:
 
   # Welche Git-Repos dürfen verwendet werden?
   sourceRepos:
-    - https://github.com/wlanboy/httptester.git
     - https://github.com/wlanboy/MirrorService.git
     - https://github.com/wlanboy/JavaHttpClient.git
     - https://github.com/wlanboy/SimpleService.git
@@ -16,8 +15,6 @@ spec:
 
   # Welche Cluster dürfen verwendet werden?
   destinations:
-    - name: gmk
-      namespace: httptester
     - name: gmk
       namespace: mirrorserver
     - name: gmk
