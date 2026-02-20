@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: javahttpclient-kaniko-
+  namespace: argocd
+spec:
+  entrypoint: build
+  serviceAccountName: workflow-sa
+
+  templates:
+    - name: build
+      container:
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+          - "--dockerfile=Dockerfile"
+          - "--context=git://github.com/wlanboy/JavaHttpClient.git#refs/heads/main"
+          - "--destination=docker.io/wlanboy/javahttpclient:latest"
+        env:
+          - name: DOCKER_CONFIG
+            value: /kaniko/.docker
+
+        volumeMounts:
+          - name: docker-config
+            mountPath: /kaniko/.docker
+
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: regcred
+            items:
+              - key: .dockerconfigjson
+                path: config.json
