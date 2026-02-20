@@ -13,6 +13,4 @@ spec:
       apiToken:
         name: github-token
         key: token
-      filter:
-        expression: "body.payload.ref_type == 'tag'"
       pollInterval: 30s
