@@ -1,23 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: tester
+  name: mirrorservice
   namespace: argocd
 spec:
   project: wlanboy
 
   source:
-    repoURL: https://github.com/wlanboy/httptester.git
+    repoURL: https://github.com/wlanboy/MirrorService.git
     targetRevision: main
-    path: tester-chart
+    path: mirror-chart
     helm:
-      releaseName: tester
+      releaseName: mirrorservice
       valueFiles:
         - values.yaml
 
   destination:
     name: gmk
-    namespace: tester
+    namespace: mirrorservice
 
   syncPolicy:
     automated:

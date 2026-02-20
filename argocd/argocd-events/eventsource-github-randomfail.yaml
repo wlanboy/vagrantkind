@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: github-randomfail
+  namespace: argocd
+spec:
+  github:
+    randomfail:
+      owner: wlanboy
+      repository: randomfail
+      events:
+        - create
+      apiToken:
+        name: github-token
+        key: token
+      filter:
+        expression: "body.payload.ref_type == 'tag'"
+      pollInterval: 30s

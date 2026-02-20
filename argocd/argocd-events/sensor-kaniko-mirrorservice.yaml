@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: kaniko-mirrorservice-sensor
+  namespace: argocd
+spec:
+  serviceAccountName: workflow-sa
+  dependencies:
+    - name: mirrorservice-tag
+      eventSourceName: github-mirrorservice
+      eventName: mirrorservice
+
+  triggers:
+    - template:
+        name: mirrorservice-build
+        conditions: "mirrorservice-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: mirrorservice-build-
+                namespace: argocd
+                labels:
+                  argocd-app: mirrorservice
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: mirrorservice-kaniko
+      parameters:
+        - src:
+            dependencyName: mirrorservice-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value

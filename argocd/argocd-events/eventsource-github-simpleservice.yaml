@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: github-simpleservice
+  namespace: argocd
+spec:
+  github:
+    simpleservice:
+      owner: wlanboy
+      repository: SimpleService
+      events:
+        - create
+      apiToken:
+        name: github-token
+        key: token
+      filter:
+        expression: "body.payload.ref_type == 'tag'"
+      pollInterval: 30s

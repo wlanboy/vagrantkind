@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: github-httptester
+  namespace: argocd
+spec:
+  # pollInterval: Argo Events pollt die GitHub Events API statt auf Webhooks zu warten.
+  # Voraussetzung: Secret "github-token" mit key "token" muss existieren.
+  # kubectl create secret generic github-token -n argocd --from-literal=token=<GITHUB_PAT>
+  github:
+    httptester:
+      owner: wlanboy
+      repository: httptester
+      events:
+        - create
+      apiToken:
+        name: github-token
+        key: token
+      filter:
+        expression: "body.payload.ref_type == 'tag'"
+      pollInterval: 30s

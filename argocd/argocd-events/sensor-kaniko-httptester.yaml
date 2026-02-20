@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: kaniko-httptester-sensor
+  namespace: argocd
+spec:
+  serviceAccountName: workflow-sa
+  dependencies:
+    - name: httptester-tag
+      eventSourceName: github-httptester
+      eventName: httptester
+
+  triggers:
+    - template:
+        name: httptester-build
+        conditions: "httptester-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: httptester-build-
+                namespace: argocd
+                labels:
+                  argocd-app: httptester
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: httptester-kaniko
+      parameters:
+        - src:
+            dependencyName: httptester-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value

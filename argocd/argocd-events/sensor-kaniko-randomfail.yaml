@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: kaniko-randomfail-sensor
+  namespace: argocd
+spec:
+  serviceAccountName: workflow-sa
+  dependencies:
+    - name: randomfail-tag
+      eventSourceName: github-randomfail
+      eventName: randomfail
+
+  triggers:
+    - template:
+        name: randomfail-build
+        conditions: "randomfail-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: randomfail-build-
+                namespace: argocd
+                labels:
+                  argocd-app: randomfail
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: randomfail-kaniko
+      parameters:
+        - src:
+            dependencyName: randomfail-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value

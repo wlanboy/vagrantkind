@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: kaniko-javahttpclient-sensor
+  namespace: argocd
+spec:
+  serviceAccountName: workflow-sa
+  dependencies:
+    - name: javahttpclient-tag
+      eventSourceName: github-javahttpclient
+      eventName: javahttpclient
+
+  triggers:
+    - template:
+        name: javahttpclient-build
+        conditions: "javahttpclient-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: javahttpclient-build-
+                namespace: argocd
+                labels:
+                  argocd-app: javahttpclient
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: javahttpclient-kaniko
+      parameters:
+        - src:
+            dependencyName: javahttpclient-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value
