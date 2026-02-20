@@ -144,7 +144,7 @@ rules:
     resources: [configmaps]
     verbs: [get, list, watch]
   - apiGroups: [argoproj.io]
-    resources: [workflows, workflowtemplates, cronworkflows, workfloweventbindings, eventsources, sensors]
+    resources: [workflows, workflowtemplates, cronworkflows, workfloweventbindings, eventsources, sensors, workflowtaskresults]
     verbs: [get, list, watch, create, update, patch, delete]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
