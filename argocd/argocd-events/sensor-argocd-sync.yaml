@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: argocd-sync-sensor
+  namespace: argocd
+spec:
+  serviceAccountName: workflow-sa
+  dependencies:
+    - name: build-complete
+      eventSourceName: workflow-complete
+      eventName: build-succeeded
+
+  triggers:
+    - template:
+        name: argocd-sync
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: argocd-sync-
+                namespace: argocd
+              spec:
+                entrypoint: sync
+                serviceAccountName: workflow-sa
+                arguments:
+                  parameters:
+                    - name: app-name
+                      value: placeholder
+                    - name: image-tag
+                      value: placeholder
+                templates:
+                  - name: sync
+                    inputs:
+                      parameters:
+                        - name: app-name
+                        - name: image-tag
+                    container:
+                      image: quay.io/argoproj/argocd:latest
+                      command: [/bin/sh, -c]
+                      args:
+                        - |
+                          argocd app set {{inputs.parameters.app-name}} \
+                            --helm-set image.tag={{inputs.parameters.image-tag}} \
+                            --server argocd-server.argocd.svc.cluster.local \
+                            --insecure \
+                            --auth-token "$ARGOCD_TOKEN" && \
+                          argocd app sync {{inputs.parameters.app-name}} \
+                            --server argocd-server.argocd.svc.cluster.local \
+                            --insecure \
+                            --auth-token "$ARGOCD_TOKEN" \
+                            --force
+                      env:
+                        - name: ARGOCD_TOKEN
+                          valueFrom:
+                            secretKeyRef:
+                              name: argocd-sync-token
+                              key: token
+      # App-Name aus Label, Image-Tag aus Workflow-Argument des abgeschlossenen Build-Workflows
+      parameters:
+        - src:
+            dependencyName: build-complete
+            dataKey: body.metadata.labels.argocd-app
+          dest: spec.arguments.parameters.0.value
+        - src:
+            dependencyName: build-complete
+            dataKey: body.spec.arguments.parameters.0.value
+          dest: spec.arguments.parameters.1.value

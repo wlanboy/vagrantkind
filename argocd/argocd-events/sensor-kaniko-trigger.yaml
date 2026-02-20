@@ -1,0 +1,159 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: kaniko-build-sensor
+  namespace: argocd
+spec:
+  serviceAccountName: workflow-sa
+  dependencies:
+    - name: httptester-tag
+      eventSourceName: github-tags
+      eventName: httptester
+    - name: randomfail-tag
+      eventSourceName: github-tags
+      eventName: randomfail
+    - name: mirrorservice-tag
+      eventSourceName: github-tags
+      eventName: mirrorservice
+    - name: javahttpclient-tag
+      eventSourceName: github-tags
+      eventName: javahttpclient
+    - name: simpleservice-tag
+      eventSourceName: github-tags
+      eventName: simpleservice
+
+  triggers:
+    - template:
+        name: httptester-build
+        conditions: "httptester-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: httptester-build-
+                namespace: argocd
+                labels:
+                  argocd-app: tester
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: httptester-kaniko
+      parameters:
+        - src:
+            dependencyName: httptester-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value
+
+    - template:
+        name: randomfail-build
+        conditions: "randomfail-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: randomfail-build-
+                namespace: argocd
+                labels:
+                  argocd-app: randomfail
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: randomfail-kaniko
+      parameters:
+        - src:
+            dependencyName: randomfail-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value
+
+    - template:
+        name: mirrorservice-build
+        conditions: "mirrorservice-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: mirrorservice-build-
+                namespace: argocd
+                labels:
+                  argocd-app: mirror
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: mirrorservice-kaniko
+      parameters:
+        - src:
+            dependencyName: mirrorservice-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value
+
+    - template:
+        name: javahttpclient-build
+        conditions: "javahttpclient-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: javahttpclient-build-
+                namespace: argocd
+                labels:
+                  argocd-app: javahttpclient
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: javahttpclient-kaniko
+      parameters:
+        - src:
+            dependencyName: javahttpclient-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value
+
+    - template:
+        name: simpleservice-build
+        conditions: "simpleservice-tag"
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: simpleservice-build-
+                namespace: argocd
+                labels:
+                  argocd-app: simpleservice
+              spec:
+                arguments:
+                  parameters:
+                    - name: image-tag
+                      value: placeholder
+                workflowTemplateRef:
+                  name: simpleservice-kaniko
+      parameters:
+        - src:
+            dependencyName: simpleservice-tag
+            dataKey: body.payload.ref
+          dest: spec.arguments.parameters.0.value

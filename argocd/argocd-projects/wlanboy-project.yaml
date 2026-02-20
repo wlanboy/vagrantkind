@@ -8,22 +8,25 @@ spec:
 
   # Welche Git-Repos dürfen verwendet werden?
   sourceRepos:
+    - https://github.com/wlanboy/httptester.git
     - https://github.com/wlanboy/MirrorService.git
     - https://github.com/wlanboy/JavaHttpClient.git
-    - https://github.com/wlanboy/kubeeventjava.git
+    - https://github.com/wlanboy/SimpleService.git
     - https://github.com/wlanboy/randomfail.git
 
   # Welche Cluster dürfen verwendet werden?
   destinations:
-    - name: local
+    - name: gmk
+      namespace: tester
+    - name: gmk
       namespace: mirror
-    - name: local
+    - name: gmk
       namespace: javahttpclient
-    - name: local
-      namespace: kubeeventjava
-    - name: local
+    - name: gmk
       namespace: randomfail
-    - name: local
+    - name: gmk
+      namespace: simpleservice
+    - name: gmk
       namespace: istio-ingress
 
   clusterResourceWhitelist:

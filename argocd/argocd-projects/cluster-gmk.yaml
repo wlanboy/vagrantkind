@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: cluster-local
+  name: cluster-gmk
   namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: cluster
 stringData:
-  name: local
+  name: gmk
   server: https://kubernetes.default.svc

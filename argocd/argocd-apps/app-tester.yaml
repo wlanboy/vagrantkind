@@ -1,23 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: randomfail
+  name: tester
   namespace: argocd
 spec:
   project: wlanboy
 
   source:
-    repoURL: https://github.com/wlanboy/randomfail.git
+    repoURL: https://github.com/wlanboy/httptester.git
     targetRevision: main
-    path: randomfail-chart
+    path: tester-chart
     helm:
-      releaseName: randomfail
+      releaseName: tester
       valueFiles:
         - values.yaml
 
   destination:
-    name: local
-    namespace: randomfail
+    name: gmk
+    namespace: tester
 
   syncPolicy:
     automated:

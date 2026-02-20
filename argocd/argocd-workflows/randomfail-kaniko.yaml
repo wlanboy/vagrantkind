@@ -1,11 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
-  name: javahttpclient-kaniko
+  name: randomfail-kaniko
   namespace: argocd
 spec:
   entrypoint: build
   serviceAccountName: workflow-sa
+  arguments:
+    parameters:
+      - name: image-tag
+        value: latest
 
   templates:
     - name: build
@@ -14,8 +18,9 @@ spec:
         command: [/kaniko/executor]
         args:
           - "--dockerfile=Dockerfile"
-          - "--context=git://github.com/wlanboy/JavaHttpClient.git#refs/heads/main"
-          - "--destination=docker.io/wlanboy/javahttpclient:latest"
+          - "--context=git://github.com/wlanboy/randomfail.git#refs/tags/{{workflow.parameters.image-tag}}"
+          - "--destination=docker.io/wlanboy/randomfail:{{workflow.parameters.image-tag}}"
+          - "--destination=docker.io/wlanboy/randomfail:latest"
         env:
           - name: DOCKER_CONFIG
             value: /kaniko/.docker

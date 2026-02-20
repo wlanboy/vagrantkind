@@ -1,23 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kubeeventjava
+  name: simpleservice
   namespace: argocd
 spec:
   project: wlanboy
 
   source:
-    repoURL: https://github.com/wlanboy/kubeeventjava.git
+    repoURL: https://github.com/wlanboy/SimpleService.git
     targetRevision: main
-    path: kubeeventjava-chart
+    path: simple-chart
     helm:
-      releaseName: kubeeventjava
+      releaseName: mirror
       valueFiles:
         - values.yaml
 
   destination:
-    name: local
-    namespace: kubeeventjava
+    name: gmk
+    namespace: simpleservice
 
   syncPolicy:
     automated:

@@ -1,23 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mirror
+  name: javahttpclient
   namespace: argocd
 spec:
   project: wlanboy
 
   source:
-    repoURL: https://github.com/wlanboy/MirrorService.git
+    repoURL: https://github.com/wlanboy/JavaHttpClient.git
     targetRevision: main
-    path: mirror-chart
+    path: javahttpclient-chart
     helm:
-      releaseName: mirror
+      releaseName: javahttpclient
       valueFiles:
         - values.yaml
 
   destination:
-    name: local
-    namespace: mirror
+    name: gmk
+    namespace: javahttpclient
 
   syncPolicy:
     automated:
