@@ -17,9 +17,9 @@ spec:
   # Welche Cluster dürfen verwendet werden?
   destinations:
     - name: gmk
-      namespace: tester
+      namespace: httptester
     - name: gmk
-      namespace: mirror
+      namespace: mirrorserver
     - name: gmk
       namespace: javahttpclient
     - name: gmk
