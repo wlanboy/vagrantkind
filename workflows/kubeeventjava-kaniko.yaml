@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: kubeeventjava-kaniko
+  namespace: argocd
+spec:
+  entrypoint: build
+  serviceAccountName: workflow-sa
+
+  templates:
+    - name: build
+      container:
+        image: gcr.io/kaniko-project/executor:latest
+        command: [/kaniko/executor]
+        args:
+          - "--dockerfile=Dockerfile"
+          - "--context=git://github.com/wlanboy/kubeeventjava.git#refs/heads/main"
+          - "--destination=docker.io/wlanboy/kubeeventjava:latest"
+        env:
+          - name: DOCKER_CONFIG
+            value: /kaniko/.docker
+
+        volumeMounts:
+          - name: docker-config
+            mountPath: /kaniko/.docker
+
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: regcred
+            items:
+              - key: .dockerconfigjson
+                path: config.json
