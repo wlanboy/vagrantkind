@@ -12,7 +12,7 @@ read -rsp "Docker Password: " DOCKER_PASSWORD
 echo
 
 kubectl create secret docker-registry regcred \
-  --docker-server=index.docker.io \
+  --docker-server=https://index.docker.io/v1/ \
   --docker-username="${DOCKER_USERNAME}" \
   --docker-password="${DOCKER_PASSWORD}" \
   --docker-email="${DOCKER_EMAIL}" \
