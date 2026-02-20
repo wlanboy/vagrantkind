@@ -4,7 +4,7 @@ metadata:
   name: javahttpclient-kaniko
   namespace: argocd
 spec:
-  entrypoint: build
+  entrypoint: main
   serviceAccountName: workflow-sa
   arguments:
     parameters:
@@ -12,7 +12,14 @@ spec:
         value: latest
 
   templates:
-    - name: build
+    - name: main
+      steps:
+        - - name: build
+            template: kaniko-build
+        - - name: update-chart
+            template: git-update
+
+    - name: kaniko-build
       container:
         image: gcr.io/kaniko-project/executor:latest
         command: [/kaniko/executor]
@@ -24,11 +31,9 @@ spec:
         env:
           - name: DOCKER_CONFIG
             value: /kaniko/.docker
-
         volumeMounts:
           - name: docker-config
             mountPath: /kaniko/.docker
-
       volumes:
         - name: docker-config
           secret:
@@ -36,3 +41,33 @@ spec:
             items:
               - key: .dockerconfigjson
                 path: config.json
+
+    - name: git-update
+      script:
+        image: docker.io/alpine/git:latest
+        command: [sh]
+        source: |
+          TOKEN=$(cat /var/run/secrets/github/token)
+          TAG="{{workflow.parameters.image-tag}}"
+
+          git clone "https://wlanboy:${TOKEN}@github.com/wlanboy/JavaHttpClient.git" /tmp/repo
+          cd /tmp/repo/javahttpclient-chart
+
+          sed -i "s|^  tag:.*|  tag: ${TAG}|" values.yaml
+
+          git config user.email "argo-workflows@gmk.lan"
+          git config user.name "Argo Workflows"
+          git add values.yaml
+          git diff --cached --quiet && echo "Nothing to commit." && exit 0
+          git commit -m "chore: update image.tag to ${TAG}"
+          git push "https://wlanboy:${TOKEN}@github.com/wlanboy/JavaHttpClient.git"
+        volumeMounts:
+          - name: github-token
+            mountPath: /var/run/secrets/github
+      volumes:
+        - name: github-token
+          secret:
+            secretName: github-token
+            items:
+              - key: token
+                path: token

@@ -7,7 +7,7 @@ spec:
   serviceAccountName: workflow-sa
   dependencies:
     - name: simpleservice-tag
-      eventSourceName: github-simpleservice
+      eventSourceName: webhook-simpleservice
       eventName: simpleservice
 
   triggers:
@@ -35,5 +35,5 @@ spec:
       parameters:
         - src:
             dependencyName: simpleservice-tag
-            dataKey: body.payload.ref
+            dataKey: body.tag
           dest: spec.arguments.parameters.0.value

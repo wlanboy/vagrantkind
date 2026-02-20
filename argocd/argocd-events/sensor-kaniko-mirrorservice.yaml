@@ -7,7 +7,7 @@ spec:
   serviceAccountName: workflow-sa
   dependencies:
     - name: mirrorservice-tag
-      eventSourceName: github-mirrorservice
+      eventSourceName: webhook-mirrorservice
       eventName: mirrorservice
 
   triggers:
@@ -35,5 +35,5 @@ spec:
       parameters:
         - src:
             dependencyName: mirrorservice-tag
-            dataKey: body.payload.ref
+            dataKey: body.tag
           dest: spec.arguments.parameters.0.value

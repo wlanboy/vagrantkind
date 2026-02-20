@@ -1,0 +1,11 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: webhook-simpleservice
+  namespace: argocd
+spec:
+  webhook:
+    simpleservice:
+      port: "12000"
+      endpoint: /simpleservice
+      method: POST

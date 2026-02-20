@@ -1,0 +1,11 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: webhook-mirrorservice
+  namespace: argocd
+spec:
+  webhook:
+    mirrorservice:
+      port: "12000"
+      endpoint: /mirrorservice
+      method: POST

@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: tag-poller-simpleservice
+  namespace: argocd
+spec:
+  schedule: "*/2 * * * *"
+  timezone: UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 0
+  workflowSpec:
+    serviceAccountName: workflow-sa
+    entrypoint: poll-and-trigger
+    templates:
+      - name: poll-and-trigger
+        script:
+          image: docker.io/alpine:3.19
+          command: [sh]
+          source: |
+            apk add -q curl jq
+
+            TOKEN=$(cat /var/run/secrets/github/token)
+
+            LATEST_TAG=$(curl -sf \
+              -H "Authorization: token $TOKEN" \
+              "https://api.github.com/repos/wlanboy/SimpleService/tags" \
+              | jq -r '.[0].name // ""')
+
+            CURRENT_TAG=$(curl -sf \
+              "https://raw.githubusercontent.com/wlanboy/SimpleService/main/simple-chart/values.yaml" \
+              | grep -E '^\s+tag:' | head -1 | awk '{print $2}' | tr -d '"')
+
+            echo "Latest tag : $LATEST_TAG"
+            echo "Current tag: $CURRENT_TAG"
+
+            if [ -n "$LATEST_TAG" ] && [ "$LATEST_TAG" != "$CURRENT_TAG" ]; then
+              echo "New tag detected — triggering build..."
+              curl -sS -f -X POST \
+                -H "Content-Type: application/json" \
+                -d "{\"tag\": \"$LATEST_TAG\"}" \
+                "http://webhook-simpleservice-eventsource-svc.argocd.svc.cluster.local:12000/simpleservice"
+              echo "Trigger sent."
+            else
+              echo "No new tag, nothing to do."
+            fi
+          volumeMounts:
+            - name: github-token
+              mountPath: /var/run/secrets/github
+        volumes:
+          - name: github-token
+            secret:
+              secretName: github-token
+              items:
+                - key: token
+                  path: token

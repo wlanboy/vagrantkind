@@ -1,0 +1,11 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: webhook-javahttpclient
+  namespace: argocd
+spec:
+  webhook:
+    javahttpclient:
+      port: "12000"
+      endpoint: /javahttpclient
+      method: POST
