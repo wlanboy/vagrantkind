@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
   name: simpleservice-kaniko
-  namespace: argocd
+  namespace: argo-workflows
 spec:
   entrypoint: main
   serviceAccountName: workflow-sa
@@ -10,6 +10,8 @@ spec:
     parameters:
       - name: image-tag
         value: latest
+      - name: git-ref
+        value: refs/heads/main
 
   templates:
     - name: main
@@ -25,7 +27,7 @@ spec:
         command: [/kaniko/executor]
         args:
           - "--dockerfile=Dockerfile"
-          - "--context=git://github.com/wlanboy/SimpleService.git#refs/tags/{{workflow.parameters.image-tag}}"
+          - "--context=git://github.com/wlanboy/SimpleService.git#{{workflow.parameters.git-ref}}"
           - "--destination=docker.io/wlanboy/simpleservice:{{workflow.parameters.image-tag}}"
           - "--destination=docker.io/wlanboy/simpleservice:latest"
         env:

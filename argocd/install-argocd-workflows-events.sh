@@ -8,8 +8,8 @@ if [[ -z "${GITHUB_TOKEN:-}" ]]; then
   read -rsp "GitHub Personal Access Token: " GITHUB_TOKEN
   echo
 fi
-kubectl delete secret github-token -n argocd --ignore-not-found
-kubectl create secret generic github-token -n argocd --from-literal=token="$GITHUB_TOKEN"
+kubectl delete secret github-token -n argo-workflows --ignore-not-found
+kubectl create secret generic github-token -n argo-workflows --from-literal=token="$GITHUB_TOKEN"
 
 echo "Hole ArgoCD Token aus Cluster..."
 ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)

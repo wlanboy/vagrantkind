@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: CronWorkflow
 metadata:
   name: tag-poller-javahttpclient
-  namespace: argocd
+  namespace: argo-workflows
 spec:
   schedule: "*/2 * * * *"
   timezone: UTC
@@ -37,8 +37,8 @@ spec:
               echo "New tag detected — triggering build..."
               curl -sS -f -X POST \
                 -H "Content-Type: application/json" \
-                -d "{\"tag\": \"$LATEST_TAG\"}" \
-                "http://webhook-javahttpclient-eventsource-svc.argocd.svc.cluster.local:12000/javahttpclient"
+                -d "{\"tag\": \"$LATEST_TAG\", \"git_ref\": \"refs/tags/$LATEST_TAG\"}" \
+                "http://webhook-javahttpclient-eventsource-svc.argo-workflows.svc.cluster.local:12000/javahttpclient"
               echo "Trigger sent."
             else
               echo "No new tag, nothing to do."
