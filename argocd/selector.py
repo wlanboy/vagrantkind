@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Interactive ArgoCD deployment selector.
-Apply order:  cluster/project → per app (namespace → app → workflow → eventsource → sensor) → global events
-Delete order: global events (reversed) → per app (sensor → eventsource → workflow → app → namespace)
+Apply order:  cluster/project → per app (namespace → app → workflow → cronworkflow → eventsource → sensor) → global events
+Delete order: global events (reversed) → per app (sensor → eventsource → cronworkflow → workflow → app → namespace)
 """
 
 import subprocess
@@ -100,10 +100,11 @@ def find_or_none(path: Path) -> Path | None:
 
 def per_app_files(name: str) -> dict:
     return {
-        "namespace":   find_or_none(NS_DIR        / f"namespace-{name}.yaml"),
-        "workflow":    find_or_none(WORKFLOWS_DIR  / f"workflow-{name}.yaml"),
-        "eventsource": find_or_none(EVENTS_DIR     / f"eventsource-github-{name}.yaml"),
-        "sensor":      find_or_none(EVENTS_DIR     / f"sensor-kaniko-{name}.yaml"),
+        "namespace":    find_or_none(NS_DIR        / f"namespace-{name}.yaml"),
+        "workflow":     find_or_none(WORKFLOWS_DIR  / f"workflow-{name}.yaml"),
+        "cronworkflow": find_or_none(EVENTS_DIR     / f"cronworkflow-tag-poller-{name}.yaml"),
+        "eventsource":  find_or_none(EVENTS_DIR     / f"eventsource-webhook-{name}.yaml"),
+        "sensor":       find_or_none(EVENTS_DIR     / f"sensor-kaniko-{name}.yaml"),
     }
 
 
@@ -133,11 +134,12 @@ def main():
             name = app_short_name(app)
             files = per_app_files(name)
             print(f"  [{name}]")
-            print(f"    1. {files['namespace'].name   if files['namespace']   else '(no namespace yaml)'}")
+            print(f"    1. {files['namespace'].name    if files['namespace']    else '(no namespace yaml)'}")
             print(f"    2. {app.name}")
-            print(f"    3. {files['workflow'].name    if files['workflow']    else '(no workflow yaml)'}")
-            print(f"    4. {files['eventsource'].name if files['eventsource'] else '(no eventsource yaml)'}")
-            print(f"    5. {files['sensor'].name      if files['sensor']      else '(no sensor yaml)'}")
+            print(f"    3. {files['workflow'].name     if files['workflow']     else '(no workflow yaml)'}")
+            print(f"    4. {files['cronworkflow'].name if files['cronworkflow'] else '(no cronworkflow yaml)'}")
+            print(f"    5. {files['eventsource'].name  if files['eventsource']  else '(no eventsource yaml)'}")
+            print(f"    6. {files['sensor'].name       if files['sensor']       else '(no sensor yaml)'}")
         if selected_globals:
             print(f"  [global events] {', '.join(f.name for f in selected_globals)}")
     else:
@@ -147,11 +149,12 @@ def main():
             name = app_short_name(app)
             files = per_app_files(name)
             print(f"  [{name}]")
-            print(f"    1. {files['sensor'].name      if files['sensor']      else '(no sensor yaml)'}")
-            print(f"    2. {files['eventsource'].name if files['eventsource'] else '(no eventsource yaml)'}")
-            print(f"    3. {files['workflow'].name    if files['workflow']    else '(no workflow yaml)'}")
-            print(f"    4. {app.name}")
-            print(f"    5. {files['namespace'].name   if files['namespace']   else '(no namespace yaml)'}")
+            print(f"    1. {files['sensor'].name       if files['sensor']       else '(no sensor yaml)'}")
+            print(f"    2. {files['eventsource'].name  if files['eventsource']  else '(no eventsource yaml)'}")
+            print(f"    3. {files['cronworkflow'].name if files['cronworkflow'] else '(no cronworkflow yaml)'}")
+            print(f"    4. {files['workflow'].name     if files['workflow']     else '(no workflow yaml)'}")
+            print(f"    5. {app.name}")
+            print(f"    6. {files['namespace'].name    if files['namespace']    else '(no namespace yaml)'}")
 
     print()
     input(f"Press Enter to {mode}, Ctrl+C to abort...")
@@ -162,7 +165,7 @@ def main():
         kubectl_apply(PROJECTS_DIR / "cluster-gmk.yaml")
         kubectl_apply(PROJECTS_DIR / "wlanboy-project.yaml")
 
-        # --- Per app: namespace → app → workflow → eventsource → sensor ---
+        # --- Per app: namespace → app → workflow → cronworkflow → eventsource → sensor ---
         for app in selected_apps:
             name = app_short_name(app)
             files = per_app_files(name)
@@ -176,6 +179,10 @@ def main():
                 kubectl_apply(files["workflow"])
             else:
                 print("  (no workflow yaml found)")
+            if files["cronworkflow"]:
+                kubectl_apply(files["cronworkflow"])
+            else:
+                print("  (no cronworkflow yaml found)")
             if files["eventsource"]:
                 kubectl_apply(files["eventsource"])
             else:
@@ -198,7 +205,7 @@ def main():
             for ev in reversed(selected_globals):
                 kubectl_delete(ev)
 
-        # --- Per app: sensor → eventsource → workflow → app → namespace ---
+        # --- Per app: sensor → eventsource → cronworkflow → workflow → app → namespace ---
         for app in selected_apps:
             name = app_short_name(app)
             files = per_app_files(name)
@@ -211,6 +218,10 @@ def main():
                 kubectl_delete(files["eventsource"])
             else:
                 print("  (no eventsource yaml found)")
+            if files["cronworkflow"]:
+                kubectl_delete(files["cronworkflow"])
+            else:
+                print("  (no cronworkflow yaml found)")
             if files["workflow"]:
                 kubectl_delete(files["workflow"])
             else:
