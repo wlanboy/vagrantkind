@@ -12,6 +12,8 @@ spec:
         value: latest
       - name: git-ref
         value: refs/heads/main
+      - name: dockerfile
+        value: Dockerfile
 
   templates:
     - name: main
@@ -26,7 +28,7 @@ spec:
         image: gcr.io/kaniko-project/executor:latest
         command: [/kaniko/executor]
         args:
-          - "--dockerfile=Dockerfile"
+          - "--dockerfile={{workflow.parameters.dockerfile}}"
           - "--context=git://github.com/wlanboy/SimpleService.git#{{workflow.parameters.git-ref}}"
           - "--destination=docker.io/wlanboy/simpleservice:{{workflow.parameters.image-tag}}"
           - "--destination=docker.io/wlanboy/simpleservice:latest"
