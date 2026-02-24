@@ -38,6 +38,11 @@ EOF
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
+# Erhöhe die Anzahl der inotify-Watches, damit Docker-Container mit vielen Dateien besser funktionieren
+grep -qxF "fs.inotify.max_user_instances=512" /etc/sysctl.conf || echo "fs.inotify.max_user_instances=512" | sudo tee -a /etc/sysctl.conf
+grep -qxF "fs.inotify.max_user_watches=65536" /etc/sysctl.conf || echo "fs.inotify.max_user_watches=65536" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+
 # Stelle sicher, dass der User in der docker-Gruppe ist
 if groups "$USER" | grep -q '\bdocker\b'; then
   echo "  $USER ist bereits in der docker-Gruppe -> übersprungen"
