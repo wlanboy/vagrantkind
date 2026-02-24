@@ -12,6 +12,158 @@ Die Workflows implementieren eine vollständige GitOps-CI/CD-Pipeline mit zwei S
 
 Nach dem Build wird der Image-Tag im `values.yaml` des zugehörigen Helm-Charts per `sed` gesetzt und als Commit zurück ins GitHub-Repository gepusht. ArgoCD erkennt die Änderung und deployed automatisch.
 
+## Architektur
+
+```
+  DEFAULT BUILDKIT                      DIESE IMPLEMENTIERUNG
+  ──────────────────────────────────    ──────────────────────────────────────────
+
+  ┌──────────────────────────────┐      ┌───────────────────────────────────-──┐
+  │  Build-Pod  (pro Build neu)  │      │  buildkitd  Deployment  (persistent) │
+  │                              │      │  rootlesskit --net=host              │
+  │  ┌──────────────────────┐    │      │  TCP :1234   UID 1000 + SYS_ADMIN    │
+  │  │  buildkitd           │    │      └──────────────────┬───────────────────┘
+  │  │  rootlesskit         │    │                         │ TCP :1234
+  │  │  Unix-Socket         │    │      ┌──────────────────▼────────────────────┐
+  │  │  UID 1000 + SYS_ADMIN│    │      │  buildctl-Pod  (pro Build, ephemeral) │
+  │  └──────────┬───────────┘    │      │  keine Privilegien, kein SYS_ADMIN    │
+  │             │ unix://        │      └───────────────────────────────────────┘
+  │  ┌──────────▼───────────┐    │
+  │  │  buildctl            │    │      ┌───────────────────────────────────────┐
+  │  │  SYS_ADMIN           │    │      │  local-registry  :5000/cache/...      │
+  │  └──────────────────────┘    │      │  --export-cache mode=max              │
+  └──────────────────────────────┘      │  --import-cache                       │
+                                        │  --opt build-arg:BUILDKIT_INLINE_CACHE│
+  ✗  Daemon-Startup (~10s) pro Build    └───────────────────────────────────────┘
+  ✗  Layer-Cache nur im RAM des Pods
+  ✗  SYS_ADMIN im Build-Pod             ✓  Daemon läuft permanent, kein Startup
+  ✗  Git-Clone ohne Auth-Limit          ✓  Layer-Cache überlebt zwischen Builds
+                                        ✓  Build-Pod ohne Privilegien
+                                        ✓  Git-Kontext mit Token (kein Rate-Limit)
+```
+
+## BuildKit Daemon
+
+Der persistente BuildKit-Daemon läuft als eigenes Deployment in `argo-workflows` und ist über den Service `buildkitd.argo-workflows.svc.cluster.local:1234` erreichbar. Workflow-Pods verbinden sich als reine `buildctl`-Clients — kein Daemon-Start, kein Startup-Overhead.
+
+```
+buildkitd-daemon.yaml → Deployment + Service (TCP :1234)
+```
+
+Vorteile gegenüber dem früheren In-Pod-Daemon:
+- Kein Startup-Overhead (~5–10 s) pro Build-Job
+- Mehrere Workflows können gleichzeitig bauen (BuildKit serialisiert/parallelisiert intern)
+- Workflow-Pods brauchen keine `SYS_ADMIN`-Capability mehr
+
+### Inline Cache
+
+`--opt build-arg:BUILDKIT_INLINE_CACHE=1` schreibt Cache-Metadaten direkt in den Image-Manifest. Ergänzt den Registry-Cache als Fallback, wenn der lokale Cache kalt ist.
+
+### Git-Kontext mit Token
+
+Der `--opt context` URL enthält das GitHub-Token, sodass auch private Repos klonbar sind und GitHub-Rate-Limits für anonyme Anfragen vermieden werden.
+
+## buildctl-Aufruf im Detail
+
+```sh
+buildctl --addr tcp://buildkitd.argo-workflows.svc.cluster.local:1234 build \
+  --frontend=dockerfile.v0 \
+  --opt context=https://wlanboy:${TOKEN}@github.com/wlanboy/<repo>.git#<git-ref> \
+  --opt filename=Dockerfile \
+  --opt build-arg:BUILDKIT_INLINE_CACHE=1 \
+  --output "type=image,name=docker.io/wlanboy/<image>:<tag>,...,push=true" \
+  --export-cache type=registry,ref=local-registry...:5000/cache/<image>,mode=max,registry.insecure=true \
+  --import-cache type=registry,ref=local-registry...:5000/cache/<image>,registry.insecure=true
+```
+
+### `--addr`
+
+```
+--addr tcp://buildkitd.argo-workflows.svc.cluster.local:1234
+```
+
+Adresse des BuildKit-Daemons. Der Workflow-Pod ist ein reiner Client (`buildctl`) und sendet den Build-Auftrag über TCP an den persistenten `buildkitd`-Daemon im selben Namespace. Ohne diese Angabe würde `buildctl` versuchen, einen lokalen Unix-Socket anzusprechen, der im Pod nicht existiert.
+
+### `--frontend`
+
+```
+--frontend=dockerfile.v0
+```
+
+Bestimmt den Parser/Interpreter für die Build-Definition. `dockerfile.v0` ist das eingebaute Dockerfile-Frontend von BuildKit — es versteht die Standard-Docker-Syntax (`FROM`, `RUN`, `COPY` usw.). Alternativ gibt es `gateway.v0` für versionierte externe Frontends (z. B. `docker/dockerfile:1.10`).
+
+### `--opt context`
+
+```
+--opt context=https://wlanboy:${TOKEN}@github.com/wlanboy/<repo>.git#<git-ref>
+```
+
+Der Build-Kontext. Statt eines lokalen Verzeichnisses gibt BuildKit direkt einen Git-Clone-URL an — der Daemon klont das Repo selbst, ohne dass der Workflow-Pod vorher `git clone` ausführen muss. Der `#<git-ref>`-Suffix wählt Branch, Tag oder Commit-SHA aus. Das Token im URL ermöglicht den Zugriff auf private Repos und vermeidet GitHub-Rate-Limits für anonyme Requests.
+
+### `--opt filename`
+
+```
+--opt filename=Dockerfile
+```
+
+Pfad zum Dockerfile relativ zum geklonten Repo-Root. Standardwert ist `Dockerfile`. Über den Workflow-Parameter `dockerfile` lässt sich ein alternativer Pfad übergeben (z. B. `docker/Dockerfile.prod`).
+
+### `--opt build-arg:BUILDKIT_INLINE_CACHE`
+
+```
+--opt build-arg:BUILDKIT_INLINE_CACHE=1
+```
+
+Spezielle BuildKit-Direktive, die das Dockerfile-Frontend anweist, Cache-Metadaten direkt in den Image-Manifest einzubetten. Das Image trägt damit seinen eigenen Cache-Fingerprint — nützlich als Fallback-Cache-Quelle, wenn der dedizierte Registry-Cache (s. `--import-cache`) nicht verfügbar ist. Muss nicht im Dockerfile per `ARG` deklariert werden; das Frontend verarbeitet es intern.
+
+### `--output`
+
+```
+--output "type=image,name=docker.io/wlanboy/<image>:<tag>,name=docker.io/wlanboy/<image>:latest,push=true"
+```
+
+Definiert, was mit dem fertigen Build-Ergebnis passiert:
+
+| Option | Bedeutung |
+|---|---|
+| `type=image` | Ausgabe als OCI/Docker-Image (nicht als tar oder lokales Verzeichnis) |
+| `name=...:<tag>` | Vollständiger Image-Name mit versioniertem Tag |
+| `name=...:latest` | Zweiter Name im selben Push — BuildKit pusht beide Tags in einem Schritt |
+| `push=true` | Image wird direkt nach dem Build in die Registry gepusht; kein separater `docker push` nötig |
+
+Die Registry-Credentials kommen aus `DOCKER_CONFIG` (gemountetes `regcred`-Secret) — `buildctl` liest die Config und übergibt die Auth-Daten im Build-Request an den Daemon.
+
+### `--export-cache`
+
+```
+--export-cache type=registry,ref=local-registry...:5000/cache/<image>,mode=max,registry.insecure=true
+```
+
+Schreibt den Build-Cache nach dem Build in die lokale Registry:
+
+| Option | Bedeutung |
+|---|---|
+| `type=registry` | Cache wird als OCI-Manifest in eine Container-Registry gespeichert |
+| `ref=...` | Ziel-Ref im lokalen Registry-Cache (separates Repo, nicht das Image-Repo) |
+| `mode=max` | Exportiert Cache-Einträge für **alle** Zwischenlayer, nicht nur den finalen Layer — maximale Cache-Trefferrate bei nachfolgenden Builds |
+| `registry.insecure=true` | Die lokale Registry läuft ohne TLS; BuildKit akzeptiert HTTP statt HTTPS |
+
+### `--import-cache`
+
+```
+--import-cache type=registry,ref=local-registry...:5000/cache/<image>,registry.insecure=true
+```
+
+Lädt den Cache vor dem Build aus der lokalen Registry:
+
+| Option | Bedeutung |
+|---|---|
+| `type=registry` | Cache-Quelle ist eine Container-Registry |
+| `ref=...` | Dieselbe Ref wie beim Export — Daemon liest die Layer-Metadaten und prüft, welche Schritte gecacht werden können |
+| `registry.insecure=true` | Wie beim Export: HTTP statt HTTPS für die lokale Registry |
+
+Wenn ein Layer-Hash übereinstimmt, überspringt BuildKit den `RUN`-Befehl und verwendet das gecachte Ergebnis. Das verkürzt Build-Zeiten bei reinen Dependency- oder Konfigurationsänderungen erheblich.
+
 ## BuildKit vs. Kaniko
 
 | | BuildKit (rootless) | Kaniko |
@@ -29,10 +181,11 @@ Nach dem Build wird der Image-Tag im `values.yaml` des zugehörigen Helm-Charts 
 | `image-tag` | `latest` | Tag des zu bauenden Images |
 | `git-ref` | `refs/heads/main` | Git-Branch oder -Tag als Build-Quelle |
 | `dockerfile` | `Dockerfile` | Pfad zum Dockerfile |
+| `push` | `true` | Image nach dem Build pushen (`true`/`false`) — auf `false` setzen für reine Build-Tests ohne Registry-Push |
 
 ## Security Context
 
-BuildKit läuft als UID 1000 mit folgender Kubernetes-Konfiguration:
+Der **BuildKit-Daemon** (Deployment) braucht `SYS_ADMIN` und Unconfined-Profile:
 
 ```yaml
 securityContext:
@@ -46,7 +199,9 @@ securityContext:
     add: ["SYS_ADMIN"]   # erlaubt mount --bind innerhalb des user namespaces
 ```
 
-`SYS_ADMIN` ist notwendig, damit `rootlesskit` innerhalb des Pods einen Mount-Namespace aufbauen kann (`failed to share mount point: /: permission denied` ohne diese Capability). `--oci-worker-no-process-sandbox` deaktiviert zusätzlich die Prozess-Isolation von buildkitd, die in einem Kubernetes-Pod nicht funktioniert.
+`SYS_ADMIN` ist notwendig, damit `rootlesskit` einen Mount-Namespace aufbauen kann. `--oci-worker-no-process-sandbox` deaktiviert die Prozess-Isolation von buildkitd, die in einem Kubernetes-Pod nicht funktioniert.
+
+Die **Workflow-Pods** (buildctl-Client) benötigen keine erhöhten Privilegien mehr — sie verbinden sich nur per TCP mit dem Daemon.
 
 ## Secrets
 
