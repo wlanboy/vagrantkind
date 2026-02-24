@@ -14,6 +14,8 @@ spec:
         value: refs/heads/main
       - name: dockerfile
         value: Dockerfile
+      - name: push
+        value: "true"
 
   templates:
     - name: main
@@ -27,29 +29,15 @@ spec:
       script:
         image: moby/buildkit:rootless
         command: [sh]
-        securityContext:
-          runAsUser: 1000
-          runAsGroup: 1000
-          seccompProfile:
-            type: Unconfined
-          appArmorProfile:
-            type: Unconfined
-          capabilities:
-            add: ["SYS_ADMIN"]
         source: |
           TAG={{workflow.parameters.image-tag}}
-          export XDG_RUNTIME_DIR=/tmp/xdg
-          mkdir -p ${XDG_RUNTIME_DIR}
-          rootlesskit buildkitd --oci-worker-no-process-sandbox &
-          for i in $(seq 1 30); do
-            buildctl --addr unix://${XDG_RUNTIME_DIR}/buildkit/buildkitd.sock debug workers 2>/dev/null && break
-            sleep 1
-          done
-          buildctl --addr unix://${XDG_RUNTIME_DIR}/buildkit/buildkitd.sock build \
+          TOKEN=$(cat /var/run/secrets/github/token)
+          buildctl --addr tcp://buildkitd.argo-workflows.svc.cluster.local:1234 build \
             --frontend=dockerfile.v0 \
-            --opt context=https://github.com/wlanboy/JavaHttpClient.git#{{workflow.parameters.git-ref}} \
+            --opt context=https://wlanboy:${TOKEN}@github.com/wlanboy/JavaHttpClient.git#{{workflow.parameters.git-ref}} \
             --opt filename={{workflow.parameters.dockerfile}} \
-            --output "type=image,name=docker.io/wlanboy/javahttpclient:${TAG},name=docker.io/wlanboy/javahttpclient:latest,push=true" \
+            --opt build-arg:BUILDKIT_INLINE_CACHE=1 \
+            --output "type=image,name=docker.io/wlanboy/javahttpclient:${TAG},name=docker.io/wlanboy/javahttpclient:latest,push={{workflow.parameters.push}}" \
             --export-cache type=registry,ref=local-registry.argo-workflows.svc.cluster.local:5000/cache/javahttpclient,mode=max,registry.insecure=true \
             --import-cache type=registry,ref=local-registry.argo-workflows.svc.cluster.local:5000/cache/javahttpclient,registry.insecure=true
         env:
@@ -58,6 +46,8 @@ spec:
         volumeMounts:
           - name: docker-config
             mountPath: /home/user/.docker
+          - name: github-token
+            mountPath: /var/run/secrets/github
       volumes:
         - name: docker-config
           secret:
@@ -65,6 +55,12 @@ spec:
             items:
               - key: .dockerconfigjson
                 path: config.json
+        - name: github-token
+          secret:
+            secretName: github-token
+            items:
+              - key: token
+                path: token
 
     - name: git-update
       script:
