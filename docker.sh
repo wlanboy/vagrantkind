@@ -41,6 +41,9 @@ fi
 # Erhöhe die Anzahl der inotify-Watches, damit Docker-Container mit vielen Dateien besser funktionieren
 grep -qxF "fs.inotify.max_user_instances=512" /etc/sysctl.conf || echo "fs.inotify.max_user_instances=512" | sudo tee -a /etc/sysctl.conf
 grep -qxF "fs.inotify.max_user_watches=65536" /etc/sysctl.conf || echo "fs.inotify.max_user_watches=65536" | sudo tee -a /etc/sysctl.conf
+grep -qxF "fs.inotify.max_queued_events=16384" /etc/sysctl.conf || echo "fs.inotify.max_queued_events=16384" | sudo tee -a /etc/sysctl.conf
+grep -qxF "vm.max_map_count=262144" /etc/sysctl.conf || echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+grep -qxF "net.ipv4.ip_forward=1" /etc/sysctl.conf || echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 
 # Stelle sicher, dass der User in der docker-Gruppe ist
