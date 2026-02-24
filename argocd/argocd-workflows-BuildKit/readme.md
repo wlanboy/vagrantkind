@@ -32,17 +32,21 @@ Nach dem Build wird der Image-Tag im `values.yaml` des zugehörigen Helm-Charts 
 
 ## Security Context
 
-BuildKit läuft rootless mit folgender Kubernetes-Konfiguration:
+BuildKit läuft als UID 1000 mit folgender Kubernetes-Konfiguration:
 
 ```yaml
 securityContext:
   runAsUser: 1000
   runAsGroup: 1000
   seccompProfile:
-    type: Unconfined
+    type: Unconfined      # erlaubt syscalls für user namespaces
+  appArmorProfile:
+    type: Unconfined      # erlaubt bind-mounts (auf Ubuntu/Debian notwendig)
+  capabilities:
+    add: ["SYS_ADMIN"]   # erlaubt mount --bind innerhalb des user namespaces
 ```
 
-`--oci-worker-no-process-sandbox` ist erforderlich, da Kubernetes die verschachtelte Prozess-Isolation verhindert.
+`SYS_ADMIN` ist notwendig, damit `rootlesskit` innerhalb des Pods einen Mount-Namespace aufbauen kann (`failed to share mount point: /: permission denied` ohne diese Capability). `--oci-worker-no-process-sandbox` deaktiviert zusätzlich die Prozess-Isolation von buildkitd, die in einem Kubernetes-Pod nicht funktioniert.
 
 ## Secrets
 
