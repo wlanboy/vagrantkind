@@ -32,6 +32,10 @@ spec:
           - "--context=git://github.com/wlanboy/MirrorService.git#{{workflow.parameters.git-ref}}"
           - "--destination=docker.io/wlanboy/mirrorservice:{{workflow.parameters.image-tag}}"
           - "--destination=docker.io/wlanboy/mirrorservice:latest"
+          - "--cache=true"
+          - "--cache-repo=local-registry.argo-workflows.svc.cluster.local:5000/cache"
+          - "--insecure-pull"
+          - "--insecure"
         env:
           - name: DOCKER_CONFIG
             value: /kaniko/.docker
