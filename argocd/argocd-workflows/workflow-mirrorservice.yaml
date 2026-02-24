@@ -25,7 +25,7 @@ spec:
 
     - name: kaniko-build
       container:
-        image: gcr.io/kaniko-project/executor:latest
+        image: ghcr.io/osscontainertools/kaniko:latest
         command: [/kaniko/executor]
         args:
           - "--dockerfile={{workflow.parameters.dockerfile}}"
