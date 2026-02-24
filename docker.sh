@@ -44,10 +44,12 @@ grep -qxF "fs.inotify.max_user_watches=65536" /etc/sysctl.conf || echo "fs.inoti
 grep -qxF "fs.inotify.max_queued_events=16384" /etc/sysctl.conf || echo "fs.inotify.max_queued_events=16384" | sudo tee -a /etc/sysctl.conf
 grep -qxF "vm.max_map_count=262144" /etc/sysctl.conf || echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
 grep -qxF "net.ipv4.ip_forward=1" /etc/sysctl.conf || echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
-grep -qxF "br_netfilter" /etc/modules-load.d/br_netfilter.conf 2>/dev/null || echo "br_netfilter" | sudo tee /etc/modules-load.d/br_netfilter.conf
-sudo modprobe br_netfilter
-grep -qxF "net.bridge.bridge-nf-call-iptables=1" /etc/sysctl.conf || echo "net.bridge.bridge-nf-call-iptables=1" | sudo tee -a /etc/sysctl.conf
-grep -qxF "net.bridge.bridge-nf-call-ip6tables=1" /etc/sysctl.conf || echo "net.bridge.bridge-nf-call-ip6tables=1" | sudo tee -a /etc/sysctl.conf
+if sudo modprobe br_netfilter 2>/dev/null; then
+  grep -qxF "net.bridge.bridge-nf-call-iptables=1" /etc/sysctl.conf || echo "net.bridge.bridge-nf-call-iptables=1" | sudo tee -a /etc/sysctl.conf
+  grep -qxF "net.bridge.bridge-nf-call-ip6tables=1" /etc/sysctl.conf || echo "net.bridge.bridge-nf-call-ip6tables=1" | sudo tee -a /etc/sysctl.conf
+else
+  echo "  br_netfilter nicht verfügbar -> bridge sysctl übersprungen"
+fi
 sudo sysctl -p
 
 # Stelle sicher, dass der User in der docker-Gruppe ist
