@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: git-update
+  namespace: tekton
+spec:
+  params:
+    - name: github-repo
+      description: "GitHub repo path, e.g. wlanboy/SimpleService"
+    - name: chart-dir
+      description: "Helm chart directory in repo, e.g. simple-chart"
+    - name: image-tag
+      default: "latest"
+  steps:
+    - name: update-chart
+      image: docker.io/alpine/git:latest
+      script: |
+        #!/bin/sh
+        TOKEN=$(cat /var/run/secrets/github/token)
+        TAG=$(params.image-tag)
+
+        git clone "https://wlanboy:${TOKEN}@github.com/$(params.github-repo).git" /tmp/repo
+        cd /tmp/repo/$(params.chart-dir)
+
+        sed -i "s|^  tag:.*|  tag: ${TAG}|" values.yaml
+
+        git config user.email "tekton@gmk.lan"
+        git config user.name "Tekton"
+        git add values.yaml
+        git diff --cached --quiet && echo "Nothing to commit." && exit 0
+        git commit -m "chore: update image.tag to ${TAG}"
+        git push "https://wlanboy:${TOKEN}@github.com/$(params.github-repo).git"
+      volumeMounts:
+        - name: github-token
+          mountPath: /var/run/secrets/github
+  volumes:
+    - name: github-token
+      secret:
+        secretName: github-token
+        items:
+          - key: token
+            path: token

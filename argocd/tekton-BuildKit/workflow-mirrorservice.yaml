@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: mirrorservice-buildkit-
+  namespace: tekton
+spec:
+  pipelineRef:
+    name: buildkit-pipeline
+  serviceAccountName: workflow-sa
+  params:
+    - name: github-repo
+      value: "wlanboy/MirrorService"
+    - name: image-name
+      value: "docker.io/wlanboy/mirrorservice"
+    - name: cache-name
+      value: "mirrorservice"
+    - name: chart-dir
+      value: "mirror-chart"
+    - name: git-ref
+      value: "refs/heads/main"
+    - name: dockerfile
+      value: "Dockerfile"
+    - name: image-tag
+      value: "latest"
+    - name: push
+      value: "true"

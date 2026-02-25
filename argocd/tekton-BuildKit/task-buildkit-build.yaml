@@ -1,0 +1,57 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildkit-build
+  namespace: tekton
+spec:
+  params:
+    - name: github-repo
+      description: "GitHub repo path, e.g. wlanboy/SimpleService"
+    - name: image-name
+      description: "Docker Hub image name, e.g. docker.io/wlanboy/simpleservice"
+    - name: cache-name
+      description: "Cache name in local registry, e.g. simpleservice"
+    - name: git-ref
+      default: "refs/heads/main"
+    - name: dockerfile
+      default: "Dockerfile"
+    - name: image-tag
+      default: "latest"
+    - name: push
+      default: "true"
+  steps:
+    - name: buildctl
+      image: moby/buildkit:rootless
+      script: |
+        #!/bin/sh
+        TAG=$(params.image-tag)
+        TOKEN=$(cat /var/run/secrets/github/token)
+        buildctl --addr tcp://buildkitd.tekton.svc.cluster.local:1234 build \
+          --frontend=dockerfile.v0 \
+          --opt context=https://wlanboy:${TOKEN}@github.com/$(params.github-repo).git#$(params.git-ref) \
+          --opt filename=$(params.dockerfile) \
+          --opt build-arg:BUILDKIT_INLINE_CACHE=1 \
+          --output "type=image,name=$(params.image-name):${TAG},name=$(params.image-name):latest,push=$(params.push)" \
+          --export-cache type=registry,ref=local-registry.tekton.svc.cluster.local:5000/cache/$(params.cache-name),mode=max,registry.insecure=true \
+          --import-cache type=registry,ref=local-registry.tekton.svc.cluster.local:5000/cache/$(params.cache-name),registry.insecure=true
+      env:
+        - name: DOCKER_CONFIG
+          value: /home/user/.docker
+      volumeMounts:
+        - name: docker-config
+          mountPath: /home/user/.docker
+        - name: github-token
+          mountPath: /var/run/secrets/github
+  volumes:
+    - name: docker-config
+      secret:
+        secretName: regcred
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+    - name: github-token
+      secret:
+        secretName: github-token
+        items:
+          - key: token
+            path: token

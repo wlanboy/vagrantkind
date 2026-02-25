@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: javahttpclient-buildkit-
+  namespace: tekton
+spec:
+  pipelineRef:
+    name: buildkit-pipeline
+  serviceAccountName: workflow-sa
+  params:
+    - name: github-repo
+      value: "wlanboy/JavaHttpClient"
+    - name: image-name
+      value: "docker.io/wlanboy/javahttpclient"
+    - name: cache-name
+      value: "javahttpclient"
+    - name: chart-dir
+      value: "javahttpclient-chart"
+    - name: git-ref
+      value: "refs/heads/main"
+    - name: dockerfile
+      value: "Dockerfile"
+    - name: image-tag
+      value: "latest"
+    - name: push
+      value: "true"

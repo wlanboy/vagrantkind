@@ -1,0 +1,221 @@
+# TriggerBinding: extrahiert Felder aus dem GitHub-Webhook-Payload
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: github-push-binding
+  namespace: tekton
+spec:
+  params:
+    - name: git-ref
+      value: $(body.ref)
+    - name: image-tag
+      value: $(body.after)
+---
+# TriggerTemplate: simpleservice
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: simpleservice-trigger-template
+  namespace: tekton
+spec:
+  params:
+    - name: git-ref
+      default: "refs/heads/main"
+    - name: image-tag
+      default: "latest"
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: simpleservice-buildkit-
+        namespace: tekton
+      spec:
+        pipelineRef:
+          name: buildkit-pipeline
+        serviceAccountName: workflow-sa
+        params:
+          - name: github-repo
+            value: "wlanboy/SimpleService"
+          - name: image-name
+            value: "docker.io/wlanboy/simpleservice"
+          - name: cache-name
+            value: "simpleservice"
+          - name: chart-dir
+            value: "simple-chart"
+          - name: git-ref
+            value: $(tt.params.git-ref)
+          - name: image-tag
+            value: $(tt.params.image-tag)
+          - name: push
+            value: "true"
+---
+# TriggerTemplate: javahttpclient
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: javahttpclient-trigger-template
+  namespace: tekton
+spec:
+  params:
+    - name: git-ref
+      default: "refs/heads/main"
+    - name: image-tag
+      default: "latest"
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: javahttpclient-buildkit-
+        namespace: tekton
+      spec:
+        pipelineRef:
+          name: buildkit-pipeline
+        serviceAccountName: workflow-sa
+        params:
+          - name: github-repo
+            value: "wlanboy/JavaHttpClient"
+          - name: image-name
+            value: "docker.io/wlanboy/javahttpclient"
+          - name: cache-name
+            value: "javahttpclient"
+          - name: chart-dir
+            value: "javahttpclient-chart"
+          - name: git-ref
+            value: $(tt.params.git-ref)
+          - name: image-tag
+            value: $(tt.params.image-tag)
+          - name: push
+            value: "true"
+---
+# TriggerTemplate: mirrorservice
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: mirrorservice-trigger-template
+  namespace: tekton
+spec:
+  params:
+    - name: git-ref
+      default: "refs/heads/main"
+    - name: image-tag
+      default: "latest"
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: mirrorservice-buildkit-
+        namespace: tekton
+      spec:
+        pipelineRef:
+          name: buildkit-pipeline
+        serviceAccountName: workflow-sa
+        params:
+          - name: github-repo
+            value: "wlanboy/MirrorService"
+          - name: image-name
+            value: "docker.io/wlanboy/mirrorservice"
+          - name: cache-name
+            value: "mirrorservice"
+          - name: chart-dir
+            value: "mirror-chart"
+          - name: git-ref
+            value: $(tt.params.git-ref)
+          - name: image-tag
+            value: $(tt.params.image-tag)
+          - name: push
+            value: "true"
+---
+# TriggerTemplate: randomfail
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: randomfail-trigger-template
+  namespace: tekton
+spec:
+  params:
+    - name: git-ref
+      default: "refs/heads/main"
+    - name: image-tag
+      default: "latest"
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: randomfail-buildkit-
+        namespace: tekton
+      spec:
+        pipelineRef:
+          name: buildkit-pipeline
+        serviceAccountName: workflow-sa
+        params:
+          - name: github-repo
+            value: "wlanboy/randomfail"
+          - name: image-name
+            value: "docker.io/wlanboy/randomfail"
+          - name: cache-name
+            value: "randomfail"
+          - name: chart-dir
+            value: "randomfail-chart"
+          - name: git-ref
+            value: $(tt.params.git-ref)
+          - name: image-tag
+            value: $(tt.params.image-tag)
+          - name: push
+            value: "true"
+---
+# EventListener: empfängt GitHub Push-Webhooks und routet per CEL-Filter
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: buildkit-event-listener
+  namespace: tekton
+spec:
+  serviceAccountName: workflow-sa
+  triggers:
+    - name: simpleservice
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.repository.full_name == 'wlanboy/SimpleService' && body.ref == 'refs/heads/main'"
+      bindings:
+        - ref: github-push-binding
+      template:
+        ref: simpleservice-trigger-template
+
+    - name: javahttpclient
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.repository.full_name == 'wlanboy/JavaHttpClient' && body.ref == 'refs/heads/main'"
+      bindings:
+        - ref: github-push-binding
+      template:
+        ref: javahttpclient-trigger-template
+
+    - name: mirrorservice
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.repository.full_name == 'wlanboy/MirrorService' && body.ref == 'refs/heads/main'"
+      bindings:
+        - ref: github-push-binding
+      template:
+        ref: mirrorservice-trigger-template
+
+    - name: randomfail
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.repository.full_name == 'wlanboy/randomfail' && body.ref == 'refs/heads/main'"
+      bindings:
+        - ref: github-push-binding
+      template:
+        ref: randomfail-trigger-template

@@ -1,0 +1,54 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: buildkit-pipeline
+  namespace: tekton
+spec:
+  params:
+    - name: github-repo
+      description: "GitHub repo path, e.g. wlanboy/SimpleService"
+    - name: image-name
+      description: "Docker Hub image name, e.g. docker.io/wlanboy/simpleservice"
+    - name: cache-name
+      description: "Cache name in local registry, e.g. simpleservice"
+    - name: chart-dir
+      description: "Helm chart directory in repo, e.g. simple-chart"
+    - name: git-ref
+      default: "refs/heads/main"
+    - name: dockerfile
+      default: "Dockerfile"
+    - name: image-tag
+      default: "latest"
+    - name: push
+      default: "true"
+  tasks:
+    - name: build
+      taskRef:
+        name: buildkit-build
+      params:
+        - name: github-repo
+          value: $(params.github-repo)
+        - name: image-name
+          value: $(params.image-name)
+        - name: cache-name
+          value: $(params.cache-name)
+        - name: git-ref
+          value: $(params.git-ref)
+        - name: dockerfile
+          value: $(params.dockerfile)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: push
+          value: $(params.push)
+    - name: update-chart
+      taskRef:
+        name: git-update
+      runAfter:
+        - build
+      params:
+        - name: github-repo
+          value: $(params.github-repo)
+        - name: chart-dir
+          value: $(params.chart-dir)
+        - name: image-tag
+          value: $(params.image-tag)
