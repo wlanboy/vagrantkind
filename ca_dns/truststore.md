@@ -66,3 +66,35 @@ env:
 | Secret als Volume | Kubernetes legt die `gmk-truststore.p12` unter `/opt/trust/` im Container ab. |
 | `JAVA_TOOL_OPTIONS` | Die JVM liest die Umgebungsvariable beim Start und verwendet den angegebenen Truststore statt des Standard-Cacerts. |
 | TLS-Handshake | Wenn die App eine HTTPS-Verbindung zu einem intern signierten Dienst aufbaut, findet sie die CA im Truststore und vertraut dem Zertifikat. |
+
+---
+
+## 4. Secret clusterweit spiegeln (Reflector)
+
+Statt das Secret manuell in jeden Namespace zu kopieren, kann der **Reflector-Controller** das Secret automatisch in alle Namespaces synchronisieren – auch in neue, die später erstellt werden.
+
+```bash
+./reflector.sh
+```
+
+Das Skript erledigt folgende Schritte:
+
+1. **Reflector installieren** – Helm-Chart in `kube-system` (wird übersprungen wenn bereits vorhanden)
+2. **Secret anlegen** – idempotent im `default` Namespace via `kubectl apply`
+3. **Annotationen setzen** – Reflector erkennt die Annotationen und spiegelt das Secret automatisch
+
+### Reflector-Annotationen im Detail
+
+| Annotation | Wert | Bedeutung |
+|---|---|---|
+| `reflection-allowed` | `"true"` | Erlaubt das Spiegeln dieses Secrets |
+| `reflection-auto-enabled` | `"true"` | Spiegelt automatisch ohne manuelle Ziel-Konfiguration |
+| `reflection-auto-namespaces` | `""` (leer) | Leer = alle Namespaces; alternativ kommagetrennte Liste z. B. `"dev,staging,prod"` |
+
+### Status prüfen
+
+```bash
+kubectl get secrets --all-namespaces | grep gmk-truststore
+```
+
+> **Hinweis:** Das Deployment-Manifest bleibt identisch (Schritt 3). Der `secretName: gmk-truststore` wird nun in jedem Namespace automatisch durch Reflector befüllt.
