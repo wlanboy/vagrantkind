@@ -1,16 +1,18 @@
 sudo apt update
-sudo apt install -y open-iscsi nfs-common
+sudo apt install -y open-iscsi nfs-common util-linux
 sudo systemctl enable --now iscsid
 
 helm repo add longhorn https://charts.longhorn.io
 helm repo update
 
-kubectl create namespace longhorn-system
+kubectl create namespace longhorn-system --dry-run=client -o yaml | kubectl apply -f -
 
 helm install longhorn longhorn/longhorn \
   --namespace longhorn-system \
   --set defaultSettings.defaultReplicaCount=1 \
   --set persistence.defaultClassReplicaCount=1
+
+kubectl -n longhorn-system rollout status deploy/longhorn-ui --timeout=300s
 
 cat <<EOF | envsubst | kubectl apply -f -
 apiVersion: cert-manager.io/v1
@@ -63,24 +65,14 @@ metadata:
   namespace: longhorn-system
 spec:
   hosts:
-  - "longhorn.gmk.lan"
+    - longhorn.gmk.lan
   exportTo:
-  - "."
-  - istio-ingress
-  - istio-system
-  gateways:
-  - istio-ingress/longhorn-gateway
-  - mesh
-spec:
-  exportTo:
-    - .
+    - "."
     - istio-ingress
     - istio-system
   gateways:
-    - longhorn-gateway
+    - istio-ingress/longhorn-gateway
     - mesh
-  hosts:
-    - longhorn.gmk.lan
   http:
     - route:
         - destination:
