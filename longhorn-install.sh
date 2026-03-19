@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
 sudo apt update
 sudo apt install -y open-iscsi nfs-common util-linux
 sudo systemctl enable --now iscsid
@@ -14,7 +17,17 @@ helm install longhorn longhorn/longhorn \
 
 kubectl -n longhorn-system rollout status deploy/longhorn-ui --timeout=300s
 
-cat <<EOF | envsubst | kubectl apply -f -
+# Node-Drain-Policy: Drain blockieren wenn Node die letzte Replica hält
+kubectl apply -f - <<EOF
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: node-drain-policy
+  namespace: longhorn-system
+value: "block-if-contains-last-replica"
+EOF
+
+kubectl apply -f - <<EOF
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -36,7 +49,7 @@ spec:
     kind: ClusterIssuer
 EOF
 
-cat <<EOF | envsubst | kubectl apply -f -
+kubectl apply -f - <<EOF
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
