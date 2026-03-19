@@ -1,0 +1,27 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgresql
+  namespace: postgresql
+spec:
+  instances: 3
+
+  storage:
+    storageClass: longhorn-postgresql
+    size: 10Gi
+
+  walStorage:
+    storageClass: longhorn-postgresql
+    size: 5Gi
+
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+      secret:
+        name: postgresql-app-secret
