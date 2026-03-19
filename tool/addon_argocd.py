@@ -74,6 +74,20 @@ def install_argocd(hostname: str) -> None:
     finally:
         os.unlink(values_path)
 
+    print("Warte auf ArgoCD Pods...")
+    run(
+        [
+            "kubectl",
+            "-n",
+            "argocd",
+            "wait",
+            "--for=condition=Ready",
+            "--all",
+            "pods",
+            "--timeout=120s",
+        ]
+    )
+
     _create_argocd_istio_resources(hostname)
 
     print("\nArgoCD Installation abgeschlossen.")
