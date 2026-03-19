@@ -34,23 +34,21 @@ else
 fi
 
 # === 2. MANAGED ROLE VIA CNPG CLUSTER ===
+# kubectl patch verwenden, damit nur die Roles-Liste geändert wird
+# und alle anderen Cluster-Felder (instances, storage, ...) erhalten bleiben.
 echo ""
 echo "==> Managed Role im CNPG Cluster registrieren..."
-kubectl apply -f - <<YAML
-apiVersion: postgresql.cnpg.io/v1
-kind: Cluster
-metadata:
-  name: postgresql
-  namespace: $PG_NAMESPACE
-spec:
-  managed:
-    roles:
-    - name: "$DB_USER"
-      login: true
-      connectionLimit: $CONN_LIMIT
-      passwordSecret:
-        name: "$SECRET_NAME"
-YAML
+NEW_ROLE=$(jq -n \
+  --arg name "$DB_USER" \
+  --argjson limit "$CONN_LIMIT" \
+  --arg secret "$SECRET_NAME" \
+  '{name:$name,login:true,connectionLimit:$limit,passwordSecret:{name:$secret}}')
+
+CURRENT_ROLES=$(kubectl get cluster postgresql -n "$PG_NAMESPACE" \
+  -o json | jq --arg user "$DB_USER" '[.spec.managed.roles[]? | select(.name != $user)]')
+
+kubectl patch cluster postgresql -n "$PG_NAMESPACE" --type=merge \
+  -p "{\"spec\":{\"managed\":{\"roles\":$(echo "$CURRENT_ROLES" | jq --argjson r "$NEW_ROLE" '. + [$r]')}}}"
 
 # === 3. DATABASE CR ===
 echo ""
