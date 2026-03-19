@@ -12,17 +12,37 @@ fi
 
 PG_NAMESPACE="postgresql"
 SECRET_NAME="postgresql-creds-${DB_NAME}"
+SU_SECRET_NAME="postgresql-superuser"
 LISTER_POD="postgresql-restore-lister"
 PVC_NAME="postgresql-backup-nfs"
+JOB_SECRET=""
+
+# Trap: temporäre Ressourcen bei jedem Exit aufräumen (Fehler, Abbruch, Erfolg)
+cleanup() {
+  kubectl delete pod "$LISTER_POD" -n "$TARGET_NS" --ignore-not-found &>/dev/null || true
+  if [[ -n "$JOB_SECRET" ]]; then
+    kubectl delete secret "$JOB_SECRET" -n "$TARGET_NS" --ignore-not-found &>/dev/null || true
+  fi
+}
+trap cleanup EXIT
 
 if ! kubectl get secret "$SECRET_NAME" -n "$PG_NAMESPACE" &>/dev/null; then
   echo "Fehler: Secret '$SECRET_NAME' nicht gefunden."
   exit 1
 fi
 
+# CNPG legt den Superuser-Secret automatisch an (postgresql-superuser)
+if ! kubectl get secret "$SU_SECRET_NAME" -n "$PG_NAMESPACE" &>/dev/null; then
+  echo "Fehler: Superuser-Secret '$SU_SECRET_NAME' nicht gefunden."
+  echo "Hinweis: CNPG legt dieses Secret automatisch beim Cluster-Start an."
+  exit 1
+fi
+
 DB_USER=$(kubectl get secret "$SECRET_NAME" -n "$PG_NAMESPACE" \
   -o jsonpath='{.data.username}' | base64 -d)
 DB_PASSWORD=$(kubectl get secret "$SECRET_NAME" -n "$PG_NAMESPACE" \
+  -o jsonpath='{.data.password}' | base64 -d)
+SU_PASSWORD=$(kubectl get secret "$SU_SECRET_NAME" -n "$PG_NAMESPACE" \
   -o jsonpath='{.data.password}' | base64 -d)
 
 echo "=== PostgreSQL Datenbank-Restore ==="
@@ -56,7 +76,7 @@ kubectl wait pod "$LISTER_POD" \
 mapfile -t DUMPS < <(kubectl exec "$LISTER_POD" -n "$TARGET_NS" -- \
   ls -t "/backups/${DB_NAME}/" 2>/dev/null | grep '\.dump$' || true)
 
-kubectl delete pod "$LISTER_POD" -n "$TARGET_NS" &>/dev/null
+kubectl delete pod "$LISTER_POD" -n "$TARGET_NS" --ignore-not-found &>/dev/null || true
 
 if [[ ${#DUMPS[@]} -eq 0 ]]; then
   echo "Keine Backups gefunden für Datenbank '$DB_NAME'."
@@ -90,7 +110,20 @@ if [[ "$CONFIRM" != "yes" ]]; then
   exit 0
 fi
 
-# === 3. RESTORE JOB ===
+# === 3. JOB-SECRET MIT CREDENTIALS ANLEGEN ===
+# Passwörter nie im Klartext im Job-Manifest – stattdessen ein kurzlebiges
+# Secret, das der Job via secretKeyRef referenziert.
+echo ""
+echo "==> Job-Credentials vorbereiten..."
+JOB_SECRET="postgresql-restore-creds-$(date +%s)"
+kubectl create secret generic "$JOB_SECRET" -n "$TARGET_NS" \
+  --from-literal=su-password="$SU_PASSWORD" \
+  --from-literal=app-password="$DB_PASSWORD"
+
+# Passwörter aus Shell-Variablen entfernen
+unset SU_PASSWORD DB_PASSWORD
+
+# === 4. RESTORE JOB ===
 echo ""
 echo "==> Restore wird gestartet..."
 JOB_NAME="postgresql-restore-${DB_NAME}-$(date +%s)"
@@ -110,23 +143,34 @@ spec:
       - name: pg-restore
         image: postgres:16
         env:
-        - name: PGPASSWORD
-          value: "$DB_PASSWORD"
+        - name: PGPASSWORD_SUPER
+          valueFrom:
+            secretKeyRef:
+              name: "$JOB_SECRET"
+              key: su-password
+        - name: PGPASSWORD_APP
+          valueFrom:
+            secretKeyRef:
+              name: "$JOB_SECRET"
+              key: app-password
         command:
         - /bin/sh
         - -c
         - |
           set -e
           echo "Trenne bestehende Verbindungen..."
-          psql -h postgresql-rw.$PG_NAMESPACE.svc.cluster.local -U postgres \
+          PGPASSWORD="\${PGPASSWORD_SUPER}" psql \
+            -h postgresql-rw.$PG_NAMESPACE.svc.cluster.local -U postgres \
             -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB_NAME' AND pid <> pg_backend_pid();"
           echo "Datenbank neu erstellen..."
-          psql -h postgresql-rw.$PG_NAMESPACE.svc.cluster.local -U postgres \
+          PGPASSWORD="\${PGPASSWORD_SUPER}" psql \
+            -h postgresql-rw.$PG_NAMESPACE.svc.cluster.local -U postgres \
             -c "DROP DATABASE IF EXISTS \"$DB_NAME\";"
-          psql -h postgresql-rw.$PG_NAMESPACE.svc.cluster.local -U postgres \
+          PGPASSWORD="\${PGPASSWORD_SUPER}" psql \
+            -h postgresql-rw.$PG_NAMESPACE.svc.cluster.local -U postgres \
             -c "CREATE DATABASE \"$DB_NAME\" OWNER \"$DB_USER\";"
           echo "Restore läuft..."
-          pg_restore \
+          PGPASSWORD="\${PGPASSWORD_APP}" pg_restore \
             -h postgresql-rw.$PG_NAMESPACE.svc.cluster.local \
             -U $DB_USER \
             -d $DB_NAME \
@@ -143,11 +187,23 @@ spec:
           claimName: $PVC_NAME
 YAML
 
+# === 5. AUF JOB WARTEN (Complete oder Failed) ===
 echo "==> Warte auf Restore-Job..."
-kubectl wait job/"$JOB_NAME" \
-  --for=condition=Complete \
-  --namespace="$TARGET_NS" \
-  --timeout=300s
+if ! kubectl wait job/"$JOB_NAME" \
+    --for=condition=Complete \
+    --namespace="$TARGET_NS" \
+    --timeout=300s 2>/dev/null; then
+  FAILED=$(kubectl get job "$JOB_NAME" -n "$TARGET_NS" \
+    -o jsonpath='{.status.failed}' 2>/dev/null || echo "0")
+  echo ""
+  if [[ "${FAILED:-0}" -gt 0 ]]; then
+    echo "Fehler: Restore-Job ist fehlgeschlagen. Logs:"
+  else
+    echo "Fehler: Timeout beim Warten auf Restore-Job. Logs:"
+  fi
+  kubectl logs -n "$TARGET_NS" -l "job-name=$JOB_NAME" --tail=50 || true
+  exit 1
+fi
 
 echo ""
 echo "=== Fertig ==="
