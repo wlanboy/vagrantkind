@@ -2,6 +2,7 @@
 set -euo pipefail
 
 PG_NAMESPACE="postgresql"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "=== PostgreSQL Restore ==="
 
@@ -66,39 +67,15 @@ kubectl wait pod \
   --timeout=120s 2>/dev/null || true
 
 # === 5. CLUSTER AUS BACKUP WIEDERHERSTELLEN ===
+# cluster.yaml als Basis – nur den Bootstrap-Abschnitt auf Recovery umschalten.
+# So bleibt die Cluster-Konfiguration (Instances, Storage, Parameter) an einer Stelle.
 echo ""
 echo "==> Cluster aus Backup '$SELECTED_BACKUP' wiederherstellen..."
-kubectl apply -f - <<YAML
-apiVersion: postgresql.cnpg.io/v1
-kind: Cluster
-metadata:
-  name: postgresql
-  namespace: $PG_NAMESPACE
-spec:
-  instances: 3
-
-  storage:
-    storageClass: longhorn-postgresql
-    size: 10Gi
-
-  walStorage:
-    storageClass: longhorn-postgresql
-    size: 5Gi
-
-  postgresql:
-    parameters:
-      max_connections: "200"
-      shared_buffers: "256MB"
-
-  backup:
-    volumeSnapshot:
-      className: longhorn-snapshot
-
-  bootstrap:
-    recovery:
-      backup:
-        name: "$SELECTED_BACKUP"
-YAML
+kubectl apply -f "$SCRIPT_DIR/cluster.yaml" \
+  --dry-run=client -o json \
+  | jq --arg backup "$SELECTED_BACKUP" \
+      '.spec.bootstrap = {"recovery":{"backup":{"name":$backup}}}' \
+  | kubectl apply -f -
 
 # === 6. WARTEN ===
 echo ""
