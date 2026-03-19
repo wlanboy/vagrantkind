@@ -1,6 +1,7 @@
 """Tool-Installation (amd64): kubectl, helm, kind, istioctl, k9s, argocd, hey, mirrord."""
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -16,8 +17,71 @@ from versions import (
 )
 
 
+def _installed_version(cmd: str) -> str:
+    """Ermittelt die installierte Version eines Tools (analog zu whelper.sh:installed_version).
+
+    Returns:
+        Version-String, "installed" fuer hey (kein Versionscheck), "" falls nicht vorhanden.
+    """
+    if not tool_exists(cmd):
+        return ""
+
+    def _grep(args: list[str], pattern: str) -> str:
+        try:
+            r = subprocess.run(args, capture_output=True, text=True, check=False)
+            m = re.search(pattern, r.stdout + r.stderr)
+            return m.group(1) if m else ""
+        except Exception:
+            return ""
+
+    if cmd == "kubectl":
+        return _grep(
+            ["kubectl", "version", "--client", "-o", "json"],
+            r'"gitVersion":\s*"v?([^"]+)"',
+        )
+    if cmd == "helm":
+        return _grep(["helm", "version", "--short"], r"v?([0-9]+\.[0-9]+\.[0-9]+)")
+    if cmd == "kind":
+        return _grep(["kind", "version"], r"v?([0-9]+\.[0-9]+\.[0-9]+)")
+    if cmd == "istioctl":
+        return _grep(
+            ["istioctl", "version", "--remote=false"],
+            r"([0-9]+\.[0-9]+\.[0-9]+)",
+        )
+    if cmd == "k9s":
+        return _grep(["k9s", "version", "--short"], r"v?([0-9]+\.[0-9]+\.[0-9]+)")
+    if cmd == "argocd":
+        return _grep(
+            ["argocd", "version", "--client", "-o", "json"],
+            r'"Version":\s*"v?([^"+]+)',
+        )
+    if cmd == "hey":
+        return "installed"
+    if cmd == "mirrord":
+        return _grep(["mirrord", "--version"], r"([0-9]+\.[0-9]+\.[0-9]+)")
+    return ""
+
+
+def _need_install(cmd: str, want: str) -> bool:
+    """Prueft ob ein Tool installiert oder aktualisiert werden muss (analog zu whelper.sh:need_install)."""
+    have = _installed_version(cmd)
+    if not have:
+        print(f"  {cmd} ist nicht installiert -> wird installiert")
+        return True
+    if have == "installed":
+        print(f"  {cmd} ist bereits installiert -> uebersprungen")
+        return False
+    # Normalisiere: fuehrendes 'v' entfernen fuer Vergleich
+    have_clean = have.lstrip("v")
+    want_clean = want.lstrip("v")
+    if have_clean == want_clean:
+        print(f"  {cmd} ist bereits in Version {want} installiert -> uebersprungen")
+        return False
+    print(f"  {cmd} Version {have} -> wird auf {want} aktualisiert")
+    return True
+
+
 def _install_kubectl() -> None:
-    print("Installiere kubectl...")
     result = run(
         ["curl", "-L", "-s", "https://dl.k8s.io/release/stable.txt"], capture=True
     )
@@ -30,7 +94,6 @@ def _install_kubectl() -> None:
 
 
 def _install_helm() -> None:
-    print(f"Installiere helm v{HELM_VERSION}...")
     tarball = f"helm-v{HELM_VERSION}-linux-amd64.tar.gz"
     run(["wget", "-q", f"https://get.helm.sh/{tarball}"])
     run(["tar", "-zxf", tarball])
@@ -40,7 +103,6 @@ def _install_helm() -> None:
 
 
 def _install_kind() -> None:
-    print(f"Installiere kind v{KIND_VERSION}...")
     run(
         [
             "curl",
@@ -55,7 +117,6 @@ def _install_kind() -> None:
 
 
 def _install_istioctl() -> None:
-    print(f"Installiere istioctl v{ISTIO_VERSION}...")
     tarball = f"istio-{ISTIO_VERSION}-linux-amd64.tar.gz"
     run(
         [
@@ -80,7 +141,6 @@ def _install_istioctl() -> None:
 
 
 def _install_k9s() -> None:
-    print(f"Installiere k9s v{K9S_VERSION}...")
     tarball = "k9s_Linux_amd64.tar.gz"
     run(
         [
@@ -100,7 +160,6 @@ def _install_k9s() -> None:
 
 
 def _install_argocd_cli() -> None:
-    print(f"Installiere argocd CLI {ARGOCD_VERSION}...")
     run(
         [
             "curl",
@@ -115,7 +174,6 @@ def _install_argocd_cli() -> None:
 
 
 def _install_hey() -> None:
-    print("Installiere hey...")
     run(
         ["wget", "-q", "https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64"]
     )
@@ -124,48 +182,41 @@ def _install_hey() -> None:
 
 
 def _install_mirrord() -> None:
-    print("Installiere mirrord...")
     run(
         "curl -fsSL https://raw.githubusercontent.com/metalbear-co/mirrord/main/scripts/install.sh | bash",
         shell=True,
     )
 
 
-_TOOLS: dict[str, callable] = {
-    "kubectl": _install_kubectl,
-    "helm": _install_helm,
-    "kind": _install_kind,
-    "istioctl": _install_istioctl,
-    "k9s": _install_k9s,
-    "argocd": _install_argocd_cli,
-    "hey": _install_hey,
-    "mirrord": _install_mirrord,
+# (cmd, gewuenschte Version fuer Vergleich)
+_TOOLS: dict[str, tuple[str, callable]] = {
+    "kubectl":  ("",              _install_kubectl),
+    "helm":     (HELM_VERSION,    _install_helm),
+    "kind":     (KIND_VERSION,    _install_kind),
+    "istioctl": (ISTIO_VERSION,   _install_istioctl),
+    "k9s":      (K9S_VERSION,     _install_k9s),
+    "argocd":   (ARGOCD_VERSION,  _install_argocd_cli),
+    "hey":      ("",              _install_hey),
+    "mirrord":  ("",              _install_mirrord),
 }
 
 
 def check_and_install_tools() -> None:
     step("Tools pruefen & installieren")
 
-    missing = [name for name in _TOOLS if not tool_exists(name)]
-
-    if not missing:
-        print("Alle Tools sind bereits installiert.")
-        return
-
-    print(f"Fehlende Tools: {', '.join(missing)}\n")
-
     original_dir = os.getcwd()
     os.chdir(Path.home())
     try:
-        for name in missing:
-            if ask_yes_no(f"  {name} installieren?"):
-                try:
-                    _TOOLS[name]()
-                    print(f"  -> {name} installiert\n")
-                except subprocess.CalledProcessError as exc:
-                    print(f"  FEHLER bei Installation von {name}: {exc}")
-                    sys.exit(1)
-            else:
-                print(f"  -> {name} uebersprungen\n")
+        for name, (want, install_fn) in _TOOLS.items():
+            if _need_install(name, want):
+                if ask_yes_no(f"  {name} installieren/aktualisieren?"):
+                    try:
+                        install_fn()
+                        print(f"  -> {name} installiert\n")
+                    except subprocess.CalledProcessError as exc:
+                        print(f"  FEHLER bei Installation von {name}: {exc}")
+                        sys.exit(1)
+                else:
+                    print(f"  -> {name} uebersprungen\n")
     finally:
         os.chdir(original_dir)
