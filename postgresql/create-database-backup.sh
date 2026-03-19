@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./create-database-backup.sh <db-name> [schedule] [retain]
+# Usage: ./create-database-backup.sh <db-name> [namespace] [schedule] [retain]
 DB_NAME="${1:-}"
-SCHEDULE="${2:-0 2 * * *}"
-RETAIN="${3:-7}"
+TARGET_NS="${2:-postgresql}"
+SCHEDULE="${3:-0 2 * * *}"
+RETAIN="${4:-7}"
 
 if [[ -z "$DB_NAME" ]]; then
-  echo "Usage: $0 <db-name> [schedule] [retain]"
-  echo "  schedule : cron-Ausdruck (default: '0 2 * * *')"
-  echo "  retain   : Anzahl Backups (default: 7)"
+  echo "Usage: $0 <db-name> [namespace] [schedule] [retain]"
+  echo "  namespace : Namespace für CronJob und PVC (default: postgresql)"
+  echo "  schedule  : cron-Ausdruck (default: '0 2 * * *')"
+  echo "  retain    : Anzahl Backups (default: 7)"
   exit 1
 fi
 
@@ -17,6 +19,9 @@ PG_NAMESPACE="postgresql"
 NFS_SERVER="gmk"
 NFS_PATH="/k8s-backups/postgresql"
 SECRET_NAME="postgresql-creds-${DB_NAME}"
+# PV-Name enthält den Namespace damit er pro Namespace eindeutig ist
+PV_NAME="postgresql-backup-nfs-${TARGET_NS}"
+PVC_NAME="postgresql-backup-nfs"
 
 if ! kubectl get secret "$SECRET_NAME" -n "$PG_NAMESPACE" &>/dev/null; then
   echo "Fehler: Secret '$SECRET_NAME' nicht gefunden. Erst ./create-database.sh ausführen."
@@ -26,19 +31,29 @@ fi
 DB_USER=$(kubectl get secret "$SECRET_NAME" -n "$PG_NAMESPACE" \
   -o jsonpath='{.data.username}' | base64 -d)
 
+# Credentials in Ziel-Namespace kopieren (wenn abweichend)
+if [[ "$TARGET_NS" != "$PG_NAMESPACE" ]]; then
+  echo "==> Secret in Namespace '$TARGET_NS' kopieren..."
+  kubectl get secret "$SECRET_NAME" -n "$PG_NAMESPACE" -o json \
+    | jq "del(.metadata.namespace,.metadata.resourceVersion,.metadata.uid,.metadata.creationTimestamp)" \
+    | kubectl apply -n "$TARGET_NS" -f -
+fi
+
 echo "=== PostgreSQL DB-Backup einrichten ==="
 echo "Datenbank : $DB_NAME"
+echo "Namespace : $TARGET_NS"
 echo "Schedule  : $SCHEDULE"
 echo "Retain    : $RETAIN Backups"
 
-# === 1. NFS PV + PVC (einmalig, geteilt für alle DB-Backups) ===
+# === 1. NFS PV + PVC ===
+# Jeder Namespace bekommt einen eigenen PV (gleicher NFS-Pfad, RWX erlaubt Mehrfach-Mount)
 echo ""
-echo "==> NFS PersistentVolume anlegen..."
+echo "==> NFS PersistentVolume anlegen (${PV_NAME})..."
 kubectl apply -f - <<YAML
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: postgresql-backup-nfs
+  name: $PV_NAME
 spec:
   capacity:
     storage: 50Gi
@@ -56,15 +71,15 @@ kubectl apply -f - <<YAML
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgresql-backup-nfs
-  namespace: $PG_NAMESPACE
+  name: $PVC_NAME
+  namespace: $TARGET_NS
 spec:
   accessModes:
   - ReadWriteMany
   resources:
     requests:
       storage: 50Gi
-  volumeName: postgresql-backup-nfs
+  volumeName: $PV_NAME
   storageClassName: ""
 YAML
 
@@ -76,7 +91,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: "postgresql-backup-${DB_NAME}"
-  namespace: $PG_NAMESPACE
+  namespace: $TARGET_NS
 spec:
   schedule: "$SCHEDULE"
   concurrencyPolicy: Forbid
@@ -120,15 +135,16 @@ spec:
           volumes:
           - name: backup
             persistentVolumeClaim:
-              claimName: postgresql-backup-nfs
+              claimName: $PVC_NAME
 YAML
 
 echo ""
 echo "=== Fertig ==="
 echo "Datenbank : $DB_NAME"
+echo "Namespace : $TARGET_NS"
 echo "Schedule  : $SCHEDULE"
 echo "Retain    : $RETAIN Backups"
 echo "Speicherort: ${NFS_SERVER}:${NFS_PATH}/${DB_NAME}/"
 echo ""
 echo "Manueller Backup-Lauf:"
-echo "  kubectl create job -n $PG_NAMESPACE --from=cronjob/postgresql-backup-${DB_NAME} backup-${DB_NAME}-manual"
+echo "  kubectl create job -n $TARGET_NS --from=cronjob/postgresql-backup-${DB_NAME} backup-${DB_NAME}-manual"

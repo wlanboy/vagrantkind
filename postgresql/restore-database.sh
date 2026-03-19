@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./restore-database.sh <db-name>
+# Usage: ./restore-database.sh <db-name> [namespace]
 DB_NAME="${1:-}"
+TARGET_NS="${2:-postgresql}"
 if [[ -z "$DB_NAME" ]]; then
-  echo "Usage: $0 <db-name>"
+  echo "Usage: $0 <db-name> [namespace]"
+  echo "  namespace : Namespace des CronJob/PVC (default: postgresql)"
   exit 1
 fi
 
 PG_NAMESPACE="postgresql"
 SECRET_NAME="postgresql-creds-${DB_NAME}"
 LISTER_POD="postgresql-restore-lister"
+PVC_NAME="postgresql-backup-nfs"
 
 if ! kubectl get secret "$SECRET_NAME" -n "$PG_NAMESPACE" &>/dev/null; then
   echo "Fehler: Secret '$SECRET_NAME' nicht gefunden."
@@ -31,29 +34,29 @@ echo "==> Verfügbare Backups werden geladen..."
 
 kubectl run "$LISTER_POD" \
   --image=postgres:16 \
-  --namespace="$PG_NAMESPACE" \
+  --namespace="$TARGET_NS" \
   --restart=Never \
-  --overrides='{
-    "spec": {
-      "volumes": [{"name":"backup","persistentVolumeClaim":{"claimName":"postgresql-backup-nfs"}}],
-      "containers": [{
-        "name": "lister",
-        "image": "postgres:16",
-        "command": ["sleep","60"],
-        "volumeMounts": [{"name":"backup","mountPath":"/backups"}]
+  --overrides="{
+    \"spec\": {
+      \"volumes\": [{\"name\":\"backup\",\"persistentVolumeClaim\":{\"claimName\":\"$PVC_NAME\"}}],
+      \"containers\": [{
+        \"name\": \"lister\",
+        \"image\": \"postgres:16\",
+        \"command\": [\"sleep\",\"60\"],
+        \"volumeMounts\": [{\"name\":\"backup\",\"mountPath\":\"/backups\"}]
       }]
     }
-  }' &>/dev/null
+  }" &>/dev/null
 
 kubectl wait pod "$LISTER_POD" \
   --for=condition=Ready \
-  --namespace="$PG_NAMESPACE" \
+  --namespace="$TARGET_NS" \
   --timeout=60s &>/dev/null
 
-mapfile -t DUMPS < <(kubectl exec "$LISTER_POD" -n "$PG_NAMESPACE" -- \
+mapfile -t DUMPS < <(kubectl exec "$LISTER_POD" -n "$TARGET_NS" -- \
   ls -t "/backups/${DB_NAME}/" 2>/dev/null | grep '\.dump$' || true)
 
-kubectl delete pod "$LISTER_POD" -n "$PG_NAMESPACE" &>/dev/null
+kubectl delete pod "$LISTER_POD" -n "$TARGET_NS" &>/dev/null
 
 if [[ ${#DUMPS[@]} -eq 0 ]]; then
   echo "Keine Backups gefunden für Datenbank '$DB_NAME'."
@@ -97,7 +100,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "$JOB_NAME"
-  namespace: $PG_NAMESPACE
+  namespace: $TARGET_NS
 spec:
   ttlSecondsAfterFinished: 300
   template:
@@ -137,13 +140,13 @@ spec:
       volumes:
       - name: backup
         persistentVolumeClaim:
-          claimName: postgresql-backup-nfs
+          claimName: $PVC_NAME
 YAML
 
 echo "==> Warte auf Restore-Job..."
 kubectl wait job/"$JOB_NAME" \
   --for=condition=Complete \
-  --namespace="$PG_NAMESPACE" \
+  --namespace="$TARGET_NS" \
   --timeout=300s
 
 echo ""
