@@ -19,6 +19,10 @@ spec:
       max_connections: "200"
       shared_buffers: "256MB"
 
+  backup:
+    volumeSnapshot:
+      className: longhorn-snapshot
+
   bootstrap:
     initdb:
       database: app
