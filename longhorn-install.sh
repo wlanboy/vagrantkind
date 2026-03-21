@@ -10,11 +10,13 @@ helm repo update
 
 kubectl create namespace longhorn-system --dry-run=client -o yaml | kubectl apply -f -
 
-helm install longhorn longhorn/longhorn \
+helm upgrade --install longhorn longhorn/longhorn \
   --namespace longhorn-system \
   --set defaultSettings.defaultReplicaCount=1 \
   --set persistence.defaultClassReplicaCount=1
 
+kubectl -n longhorn-system rollout status daemonset/longhorn-manager --timeout=300s
+kubectl -n longhorn-system rollout status deploy/longhorn-driver-deployer --timeout=300s
 kubectl -n longhorn-system rollout status deploy/longhorn-ui --timeout=300s
 
 # Node-Drain-Policy: Drain blockieren wenn Node die letzte Replica hält
