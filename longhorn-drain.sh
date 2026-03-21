@@ -67,4 +67,4 @@ ssh -o StrictHostKeyChecking=no "$NODE_IP" \
 echo ""
 echo "=== Drain abgeschlossen ==="
 echo "Node '$NODE' ist drainiert und rebootet."
-echo "Weiter mit: ./undrain-with-longhorn.sh $NODE"
+echo "Weiter mit: ./longhorn-undrain.sh $NODE"
