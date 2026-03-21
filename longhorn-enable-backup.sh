@@ -22,6 +22,9 @@ value: "nfs://${NFS_SERVER}:${NFS_PATH}"
 EOF
 
 # --- Standard-Job-Gruppe für alle NEUEN Volumes setzen ---
+# Hinweis: Diese Einstellung gilt nur für neu erstellte Volumes.
+# Bestehende Volumes müssen manuell in die Gruppe 'default' aufgenommen werden:
+#   kubectl -n longhorn-system label volume <name> recurring-job-group.longhorn.io/default=enabled
 echo "-> Setting default recurring job group for new volumes..."
 cat <<EOF | kubectl apply -f -
 apiVersion: longhorn.io/v1beta2
