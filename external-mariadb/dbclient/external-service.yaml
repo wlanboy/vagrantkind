@@ -10,8 +10,8 @@ spec:
   - gmkchost.lan
   ports:
   - number: 3306
-    name: mysql
-    protocol: MySQL
+    name: tcp-mysql
+    protocol: TCP
   location: MESH_EXTERNAL
   resolution: DNS
 ---
