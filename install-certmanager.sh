@@ -26,7 +26,7 @@ echo "Erstelle cert-manager Namespace..."
 kubectl get ns cert-manager &>/dev/null || kubectl create namespace cert-manager
 
 echo "Füge Jetstack Helm Repository hinzu..."
-helm repo add jetstack https://charts.jetstack.io
+helm repo add jetstack https://charts.jetstack.io 2>/dev/null || true
 helm repo update
 
 echo "Installiere cert-manager..."
@@ -34,9 +34,6 @@ helm upgrade --install cert-manager jetstack/cert-manager \
     --namespace cert-manager \
     --set crds.enabled=true \
     --wait
-
-echo "Warte auf cert-manager Pods..."
-kubectl -n cert-manager wait --for=condition=Ready --all pods --timeout=120s
 
 echo "Erstelle CA Secret..."
 kubectl create secret tls my-local-ca-secret \
