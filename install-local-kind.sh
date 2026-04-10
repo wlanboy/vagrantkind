@@ -19,7 +19,11 @@ if [[ ! -f "$SCRIPT_DIR/kind-local.yaml" ]]; then
 fi
 
 echo "Erstelle Kind Cluster..."
-kind create cluster --config="$SCRIPT_DIR/kind-local.yaml"
+if kind get clusters 2>/dev/null | grep -q "^local$"; then
+    echo "Kind Cluster 'local' existiert bereits, überspringe Erstellung."
+else
+    kind create cluster --config="$SCRIPT_DIR/kind-local.yaml"
+fi
 
 echo "Warte auf Cluster..."
 kubectl wait --for=condition=Ready nodes --all --timeout=120s
@@ -28,8 +32,9 @@ echo "Installing MetalLB (version ${METALLB_VERSION})..."
 METALLB_MANIFEST_URL="https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml"
 kubectl apply -f "${METALLB_MANIFEST_URL}"
 
-echo "Warte auf MetalLB Pods..."
-kubectl -n metallb-system wait --for=condition=Ready --all pods --timeout=120s
+echo "Warte auf MetalLB..."
+kubectl -n metallb-system rollout status deployment --timeout=120s
+kubectl -n metallb-system rollout status daemonset --timeout=120s
 
 kubectl apply -f "$SCRIPT_DIR/metallb-pool.yaml"
 kubectl apply -f "$SCRIPT_DIR/metallb-adv.yaml"
