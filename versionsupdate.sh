@@ -153,6 +153,11 @@ elif $DRY_RUN; then
   echo -e "${YELLOW}$UPDATES Update(s) verfügbar.${NC}"
   echo "Zum Anwenden:  $0 --apply"
   echo "Mit Commit:    $0 --commit"
+  echo ""
+  read -r -p "Jetzt ./versionsupdate.sh --commit ausführen? [y/N] " ANSWER
+  if [[ "${ANSWER,,}" == "y" ]]; then
+    exec "$0" --commit
+  fi
 else
   echo -e "${GREEN}$UPDATES Version(en) in versions.sh aktualisiert.${NC}"
   if $COMMIT; then
