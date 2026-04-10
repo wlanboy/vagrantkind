@@ -5,7 +5,9 @@ sudo apt update
 sudo apt install -y open-iscsi nfs-common util-linux
 sudo systemctl enable --now iscsid
 
-helm repo add longhorn https://charts.longhorn.io
+if ! helm repo list 2>/dev/null | grep -q "^longhorn"; then
+    helm repo add longhorn https://charts.longhorn.io
+fi
 helm repo update
 
 kubectl create namespace longhorn-system --dry-run=client -o yaml | kubectl apply -f -
@@ -18,6 +20,12 @@ helm upgrade --install longhorn longhorn/longhorn \
 kubectl -n longhorn-system rollout status daemonset/longhorn-manager --timeout=300s
 kubectl -n longhorn-system rollout status deploy/longhorn-driver-deployer --timeout=300s
 kubectl -n longhorn-system rollout status deploy/longhorn-ui --timeout=300s
+
+# Warten bis Longhorn CRDs verfügbar sind
+echo "-> Warte auf Longhorn CRD-Registrierung..."
+until kubectl get crd settings.longhorn.io >/dev/null 2>&1; do
+    sleep 2
+done
 
 # Node-Drain-Policy: Drain blockieren wenn Node die letzte Replica hält
 kubectl apply -f - <<EOF
@@ -56,7 +64,7 @@ apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   name: longhorn-gateway
-  namespace: longhorn-system
+  namespace: istio-ingress
 spec:
   selector:
     istio: ingressgateway
