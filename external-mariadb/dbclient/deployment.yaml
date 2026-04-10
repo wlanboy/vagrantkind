@@ -1,0 +1,71 @@
+---
+# Deployment mit sysbench als MySQL Benchmark/Client Tool
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sysbench
+  namespace: dbclient
+  labels:
+    app: sysbench
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sysbench
+  template:
+    metadata:
+      labels:
+        app: sysbench
+      annotations:
+        # Istio Sidecar Injection explizit aktivieren
+        sidecar.istio.io/inject: "true"
+        # Persistente Verbindungen: Istio soll TCP-Verbindungen nicht vorzeitig trennen
+        proxy.istio.io/config: |
+          holdApplicationUntilProxyStarts: true
+    spec:
+      containers:
+      - name: sysbench
+        image: severalnines/sysbench:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sleep", "infinity"]
+        env:
+        - name: MYSQL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: MYSQL_HOST
+        - name: MYSQL_PORT
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: MYSQL_PORT
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: MYSQL_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: MYSQL_DATABASE
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+      volumes:
+      - name: scripts
+        configMap:
+          name: sysbench-scripts
+          defaultMode: 0755

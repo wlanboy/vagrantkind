@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sysbench-scripts
+  namespace: dbclient
+data:
+  prepare.sh: |
+    #!/bin/bash
+    echo "=== Sysbench Prepare ==="
+    sysbench oltp_read_write \
+      --db-driver=mysql \
+      --mysql-host=${MYSQL_HOST} \
+      --mysql-port=${MYSQL_PORT} \
+      --mysql-user=${MYSQL_USER} \
+      --mysql-password=${MYSQL_PASSWORD} \
+      --mysql-db=${MYSQL_DATABASE} \
+      --tables=4 \
+      --table-size=10000 \
+      prepare
+    echo "=== Prepare done ==="
+
+  run.sh: |
+    #!/bin/bash
+    echo "=== Sysbench Run ==="
+    sysbench oltp_read_write \
+      --db-driver=mysql \
+      --mysql-host=${MYSQL_HOST} \
+      --mysql-port=${MYSQL_PORT} \
+      --mysql-user=${MYSQL_USER} \
+      --mysql-password=${MYSQL_PASSWORD} \
+      --mysql-db=${MYSQL_DATABASE} \
+      --tables=4 \
+      --table-size=10000 \
+      --threads=4 \
+      --time=60 \
+      --report-interval=10 \
+      run
+    echo "=== Run done ==="
+
+  cleanup.sh: |
+    #!/bin/bash
+    echo "=== Sysbench Cleanup ==="
+    sysbench oltp_read_write \
+      --db-driver=mysql \
+      --mysql-host=${MYSQL_HOST} \
+      --mysql-port=${MYSQL_PORT} \
+      --mysql-user=${MYSQL_USER} \
+      --mysql-password=${MYSQL_PASSWORD} \
+      --mysql-db=${MYSQL_DATABASE} \
+      --tables=4 \
+      cleanup
+    echo "=== Cleanup done ==="

@@ -1,0 +1,10 @@
+---
+# PeerAuthentication: mTLS im Namespace dbclient aktivieren
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: dbclient-mtls
+  namespace: dbclient
+spec:
+  mtls:
+    mode: PERMISSIVE

@@ -1,0 +1,39 @@
+---
+# ServiceEntry registriert den externen MySQL-Host gmkchost.lan im Istio Service Mesh
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: mysql-external
+  namespace: dbclient
+spec:
+  hosts:
+  - gmkchost.lan
+  ports:
+  - number: 3306
+    name: mysql
+    protocol: MySQL
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# DestinationRule aktiviert persistente Verbindungen (Connection Pooling) für den externen MySQL-Host
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: mysql-external
+  namespace: dbclient
+spec:
+  host: gmkchost.lan
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+          probes: 10
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
