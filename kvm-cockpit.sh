@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 echo "=== Cockpit installieren ==="
+sudo apt update
 sudo apt install -y cockpit cockpit-machines
 
 echo "=== Cockpit aktivieren ==="
