@@ -3,7 +3,7 @@
 # Diese Datei wird von amd64-tools.sh und arm64-tools.sh eingebunden
 
 # https://github.com/helm/helm/releases
-HELM_VERSION="4.1.3"
+HELM_VERSION="4.1.4"
 
 # https://github.com/kubernetes-sigs/kind/releases/
 KIND_VERSION="0.31.0"
@@ -15,7 +15,7 @@ ISTIO_VERSION="1.29.1"
 K9S_VERSION="0.50.18"
 
 # https://github.com/argoproj/argo-cd/releases
-ARGOCD_VERSION="v3.3.4"
+ARGOCD_VERSION="v3.3.6"
 
 # https://sdkman.io/ -> sdk list java / sdk list maven
 JAVA_VERSION="25-tem"
