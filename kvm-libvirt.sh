@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 echo "=== System aktualisieren ==="
 sudo apt update
@@ -67,7 +67,12 @@ for key in \
     unix_sock_rw_perms \
     unix_sock_admin_perms \
     unix_sock_dir; do
+    # Kommentierte Zeile aktivieren (nur wenn noch kommentiert)
     sudo sed -i "s|^#\s*\(${key}\s*=.*\)|\1|" "$LIBVIRTD_CONF"
+    # Sicherstellen dass die Zeile aktiv ist (falls sie komplett fehlte)
+    if ! grep -qE "^${key}\s*=" "$LIBVIRTD_CONF"; then
+        echo "WARNUNG: ${key} nicht in ${LIBVIRTD_CONF} gefunden – bitte manuell prüfen."
+    fi
 done
 echo "Fertig – betroffene Zeilen in $LIBVIRTD_CONF:"
 grep -E "^(unix_sock_group|unix_sock_ro_perms|unix_sock_rw_perms|unix_sock_admin_perms|unix_sock_dir)" "$LIBVIRTD_CONF"
@@ -76,6 +81,14 @@ echo "=== libvirtd aktivieren ==="
 sudo systemctl enable --now libvirtd
 sudo systemctl daemon-reload
 sudo systemctl restart libvirtd
+
+echo "=== default-Netzwerk aktivieren ==="
+if ! sudo virsh net-info default 2>/dev/null | grep -q "Autostart:.*yes"; then
+    sudo virsh net-autostart default
+fi
+if ! sudo virsh net-info default 2>/dev/null | grep -q "Active:.*yes"; then
+    sudo virsh net-start default
+fi
 
 echo "=== Fertig! ==="
 echo "Starte dein System neu, damit Gruppenrechte aktiv werden."
