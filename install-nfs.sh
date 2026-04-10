@@ -21,9 +21,18 @@ mkdir -p "$REAL_DIR"
 chmod 777 "$REAL_DIR"
 mkdir -p "$EXPORT_DIR"
 
+# --- Validate source directory is a real mount, not an empty fallback ---
+if ! mountpoint -q "$REAL_DIR" && [ -z "$(ls -A "$REAL_DIR" 2>/dev/null)" ]; then
+    echo "WARNUNG: ${REAL_DIR} ist kein Mountpoint und scheint leer zu sein."
+    echo "         Bitte sicherstellen, dass die SATA-Disk gemountet ist."
+    exit 1
+fi
+
 # --- Bind mount ---
 echo "-> Bind-mounting ${REAL_DIR} -> ${EXPORT_DIR}..."
-mount --bind "$REAL_DIR" "$EXPORT_DIR"
+if ! mountpoint -q "$EXPORT_DIR"; then
+    mount --bind "$REAL_DIR" "$EXPORT_DIR"
+fi
 
 if ! grep -q "$EXPORT_DIR" /etc/fstab; then
     echo "$REAL_DIR $EXPORT_DIR none bind 0 0" >> /etc/fstab
@@ -37,11 +46,11 @@ sed -i "\|$EXPORT_DIR|d" /etc/exports
 echo "$EXPORT_ROOT $NETWORK_CIDR(rw,sync,fsid=0,no_subtree_check,no_root_squash)" >> /etc/exports
 echo "$EXPORT_DIR $NETWORK_CIDR($EXPORT_OPTIONS)" >> /etc/exports
 
-exportfs -ra
-
 # --- Enable and start NFS ---
 echo "-> Starting NFS server..."
 systemctl enable --now nfs-server
+
+exportfs -ra
 
 echo
 echo "=== Fertig ==="
