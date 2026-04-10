@@ -25,7 +25,7 @@ curl -sfL https://get.k3s.io -o /tmp/k3s-install.sh
 chmod +x /tmp/k3s-install.sh
 K3S_KUBECONFIG_MODE="644" \
 INSTALL_K3S_CHANNEL=stable \
-INSTALL_K3S_EXEC="--disable=traefik --node-external-ip=$LOKALE_IP" \
+INSTALL_K3S_EXEC="--disable=traefik --node-external-ip=$LOKALE_IP --resolv-conf=/run/systemd/resolve/resolv.conf" \
 /tmp/k3s-install.sh
 
 # Kubeconfig kopieren
