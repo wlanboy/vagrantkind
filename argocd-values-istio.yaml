@@ -1,0 +1,15 @@
+server:
+  # Deaktiviert HTTPS, da Istio TLS übernimmt
+  insecure: true
+  extraArgs:
+    - --insecure
+
+  # Service als ClusterIP, Istio kümmert sich um Ingress
+  service:
+    type: ClusterIP
+
+# Redis Auth falls benötigt
+redis:
+  auth:
+    enabled: true
+    existingSecret: argocd-redis
