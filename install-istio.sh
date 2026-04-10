@@ -10,7 +10,7 @@ for cmd in helm kubectl; do
 done
 
 echo "Adding Istio Helm repository and updating..."
-helm repo add istio https://istio-release.storage.googleapis.com/charts
+helm repo add istio https://istio-release.storage.googleapis.com/charts 2>/dev/null || true
 helm repo update
 echo "Istio Helm repository added and updated."
 
@@ -19,11 +19,11 @@ kubectl get ns istio-system &>/dev/null || kubectl create namespace istio-system
 echo "'istio-system' namespace ensured."
 
 echo "Installing Istio Base components into 'istio-system'..."
-helm install istio-base istio/base -n istio-system --wait
+helm upgrade --install istio-base istio/base -n istio-system --wait
 echo "Istio Base installed."
 
 echo "Installing Istiod (Istio Control Plane) into 'istio-system'..."
-helm install istiod istio/istiod -n istio-system --wait
+helm upgrade --install istiod istio/istiod -n istio-system --wait
 echo "Istiod installed and ready."
 
 echo "Creating 'istio-ingress' namespace if it doesn't exist..."
@@ -31,7 +31,7 @@ kubectl get ns istio-ingress &>/dev/null || kubectl create namespace istio-ingre
 echo "'istio-ingress' namespace ensured."
 
 echo "Installing Istio Ingress Gateway into 'istio-ingress'..."
-helm install istio-ingressgateway istio/gateway -n istio-ingress --wait
+helm upgrade --install istio-ingressgateway istio/gateway -n istio-ingress --wait
 echo "Istio Ingress Gateway installed."
 
 # --- Demo Service Deployment ---
