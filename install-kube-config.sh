@@ -10,6 +10,9 @@ REMOTE_K3S_PATH="/home/$SSH_USER/.kube/k3s.yaml"
 LOCAL_K3S_PATH="$HOME/.kube/k3s-remote-temp.yaml"
 LOCAL_KUBECONFIG="$HOME/.kube/config"
 
+# Temporäre Datei bei Skriptabbruch aufräumen
+trap 'rm -f "$LOCAL_K3S_PATH"' EXIT
+
 # Prüfen ob benötigte Tools vorhanden sind
 for cmd in kubectl scp ping; do
     if ! command -v "$cmd" &>/dev/null; then
@@ -45,8 +48,9 @@ echo "   -> Datei erfolgreich nach $LOCAL_K3S_PATH geladen."
 # ----------------------------------------------------------------------
 # 3. KORRIGIEREN DES SERVER-EINTRAGS UND NAMEN
 # ----------------------------------------------------------------------
-echo "3. Korrigiere den Server-Eintrag (127.0.0.1 zu $SERVER_IP)..."
-sed -i "s/127.0.0.1/$SERVER_IP/g" "$LOCAL_K3S_PATH"
+echo "3. Korrigiere den Server-Eintrag (127.0.0.1/localhost zu $SERVER_IP)..."
+sed -i "s/127\.0\.0\.1/$SERVER_IP/g" "$LOCAL_K3S_PATH"
+sed -i "s/localhost/$SERVER_IP/g" "$LOCAL_K3S_PATH"
 
 echo "   Benenne Cluster/Context/User um (default -> k3s-$SERVER)..."
 sed -i "s/: default$/: k3s-$SERVER/g" "$LOCAL_K3S_PATH"
@@ -60,7 +64,7 @@ echo "4. Führe die Konfigurationen zusammen..."
 mkdir -p "$(dirname "$LOCAL_KUBECONFIG")"
 KUBECONFIG="$LOCAL_KUBECONFIG:$LOCAL_K3S_PATH" kubectl config view --flatten > /tmp/merged-kubeconfig
 mv /tmp/merged-kubeconfig "$LOCAL_KUBECONFIG"
-rm -f "$LOCAL_K3S_PATH"
+chmod 600 "$LOCAL_KUBECONFIG"
 
 # ----------------------------------------------------------------------
 # 5. ABSCHLUSS & PRÜFUNG
@@ -78,5 +82,5 @@ if [[ -n "$NEW_CONTEXT" ]]; then
     echo "Um den K3s-Cluster zu verwenden:"
     echo "kubectl config use-context \"$NEW_CONTEXT\""
     echo ""
-    kubectl get nodes
-fi  
+    kubectl get nodes --context "$NEW_CONTEXT"
+fi
