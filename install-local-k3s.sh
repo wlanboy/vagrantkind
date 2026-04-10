@@ -1,8 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-METALLB_VERSION="0.15.2"
-
 # Prüfen ob als root ausgeführt wird (sollte nicht)
 if [[ $EUID -eq 0 ]]; then
     echo "Bitte nicht als root ausführen"
@@ -43,18 +41,7 @@ sudo chown "$USER":"$USER" ~/.kube/node-token
 echo "Warte auf K3s..."
 kubectl wait --for=condition=Ready nodes --all --timeout=120s
 
-# MetalLB installieren
-echo "Installing MetalLB (version ${METALLB_VERSION})..."
-METALLB_MANIFEST_URL="https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml"
-kubectl apply -f "${METALLB_MANIFEST_URL}"
-
-echo "Warte auf MetalLB..."
-kubectl -n metallb-system rollout status deployment --timeout=120s
-kubectl -n metallb-system rollout status daemonset --timeout=120s
-
-kubectl apply -f metallb-pool-k3s.yaml
-kubectl apply -f metallb-adv.yaml
-echo "MetalLB konfiguriert."
-
-# Delete cluster
-#sudo /usr/local/bin/k3s-uninstall.sh
+echo ""
+echo "Nächster Schritt: MetalLB installieren mit ./install-metallb.sh"
+echo ""
+echo "Cluster löschen: sudo /usr/local/bin/k3s-uninstall.sh"
