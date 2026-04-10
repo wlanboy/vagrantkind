@@ -30,7 +30,7 @@ for arg in "$@"; do
       echo "  --commit            Versionen aktualisieren und git commit erstellen"
       echo "  --skip=helm,istio   Tools vom Update ausschließen"
       echo ""
-      echo "Verfügbare Tools: helm, kind, istio, k9s, argocd"
+      echo "Verfügbare Tools: helm, kind, istio, k9s, argocd, metallb"
       exit 0
       ;;
   esac
@@ -133,6 +133,14 @@ if ! is_skipped argocd; then
   ARGOCD_LATEST=$(github_latest_raw "argoproj/argo-cd")
   update_version "ARGOCD_VERSION" "$ARGOCD_VERSION" "$ARGOCD_LATEST"
   COMMIT_LOG+="ArgoCD (argoproj/argo-cd):\n$LAST_VERSION_MSG\n"
+fi
+
+# --- MetalLB ---
+echo "MetalLB (metallb/metallb):"
+if ! is_skipped metallb; then
+  METALLB_LATEST=$(github_latest "metallb/metallb")
+  update_version "METALLB_VERSION" "$METALLB_VERSION" "$METALLB_LATEST"
+  COMMIT_LOG+="MetalLB (metallb/metallb):\n$LAST_VERSION_MSG\n"
 fi
 
 echo ""
