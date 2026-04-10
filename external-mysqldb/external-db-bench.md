@@ -13,46 +13,20 @@ Sysbench-Deployment im Namespace `dbclient` mit Istio-Integration für persisten
 | `deployment.yaml` | Sysbench-Deployment mit Istio-Sidecar (`perconalab/sysbench`) |
 | `peer-authentication.yaml` | mTLS PERMISSIVE für den Namespace |
 
-## Voraussetzungen
-
-### CoreDNS: Pi-hole als Upstream
-
-`.lan`-Hostnamen werden vom sysbench-Image nicht aufgelöst (fehlende DNS-Bibliotheken im Container). Daher wird die IP direkt verwendet. Für generelle `.lan`-Auflösung im Cluster CoreDNS patchen:
-
-```bash
-kubectl edit configmap coredns -n kube-system
-```
-
-Im `Corefile` den `forward`-Eintrag auf Pi-hole setzen:
-
-```
-forward . 192.168.178.91
-```
-
-Oder als separaten Block vor dem `.`-Block:
-
-```
-lan:53 {
-    errors
-    forward . 192.168.178.91
-    cache 30
-}
-```
-
 ## Deployment
 
 Namespace zuerst anlegen, dann alle Ressourcen:
 
 ```bash
-kubectl apply -f external-mariadb/dbclient/namespace.yaml
-kubectl apply -f external-mariadb/dbclient/
+kubectl apply -f external-mysqldb/dbclient/namespace.yaml
+kubectl apply -f external-mysqldb/dbclient/
 ```
 
 Bei Secret-Änderungen (z.B. neue IP) Secret neu anlegen und Deployment neu starten:
 
 ```bash
 kubectl delete secret mysql-credentials -n dbclient
-kubectl apply -f external-mariadb/dbclient/secret.yaml
+kubectl apply -f external-mysqldb/dbclient/secret.yaml
 kubectl rollout restart deployment/sysbench -n dbclient
 kubectl -n dbclient rollout status deployment/sysbench
 ```
@@ -104,6 +78,6 @@ Die `DestinationRule` konfiguriert:
 
 ```bash
 kubectl delete secret mysql-credentials -n dbclient
-kubectl apply -f external-mariadb/dbclient/secret.yaml
+kubectl apply -f external-mysqldb/dbclient/secret.yaml
 kubectl rollout restart deployment/sysbench -n dbclient
 ```
