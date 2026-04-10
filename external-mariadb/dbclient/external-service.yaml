@@ -8,12 +8,16 @@ metadata:
 spec:
   hosts:
   - gmkchost.lan
+  addresses:
+  - 192.168.178.28/32
   ports:
   - number: 3306
     name: tcp-mysql
     protocol: TCP
   location: MESH_EXTERNAL
-  resolution: DNS
+  resolution: STATIC
+  endpoints:
+  - address: 192.168.178.28
 ---
 # DestinationRule aktiviert persistente Verbindungen (Connection Pooling) für den externen MySQL-Host
 apiVersion: networking.istio.io/v1alpha3
