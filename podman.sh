@@ -20,14 +20,35 @@ else
   echo "  Alle Podman-Pakete sind bereits installiert -> übersprungen"
 fi
 
+# --- newuidmap/newgidmap: suid setzen für rootless Podman ---
+for bin in /usr/bin/newuidmap /usr/bin/newgidmap; do
+  if [ -u "$bin" ]; then
+    echo "  $bin hat bereits suid -> übersprungen"
+  else
+    echo "  Setze suid auf $bin"
+    sudo chmod u+s "$bin"
+  fi
+done
+
 # --- Rootless: subuid/subgid ---
-if grep -q "^${USER}:" /etc/subuid 2>/dev/null; then
-  echo "  subuid für $USER ist bereits konfiguriert -> übersprungen"
+SUBUID_OK=false
+SUBGID_OK=false
+grep -q "^${USER}:" /etc/subuid 2>/dev/null && SUBUID_OK=true
+grep -q "^${USER}:" /etc/subgid 2>/dev/null && SUBGID_OK=true
+
+if $SUBUID_OK && $SUBGID_OK; then
+  echo "  subuid/subgid für $USER sind bereits konfiguriert -> übersprungen"
 else
-  echo "  subuid/subgid für $USER wird konfiguriert"
-  sudo usermod --add-subuids 100000-165535 "$USER"
-  sudo usermod --add-subgids 100000-165535 "$USER"
+  if ! $SUBUID_OK; then
+    echo "  subuid für $USER wird konfiguriert"
+    sudo usermod --add-subuids 100000-165535 "$USER"
+  fi
+  if ! $SUBGID_OK; then
+    echo "  subgid für $USER wird konfiguriert"
+    sudo usermod --add-subgids 100000-165535 "$USER"
+  fi
   podman system migrate
+  echo "  HINWEIS: Bitte melde dich ab und wieder an, damit die neuen UID/GID-Mappings wirksam werden."
 fi
 
 # --- Registry-Konfiguration ---
@@ -41,6 +62,11 @@ else
 # Rootless Podman: Short-Name-Auflösung
 unqualified-search-registries = ["docker.io", "quay.io", "ghcr.io"]
 EOF
+  # Sicherstellen dass kein Duplikat entstanden ist
+  COUNT=$(grep -c 'unqualified-search-registries.*docker.io' "$REGISTRIES_CONF" 2>/dev/null || true)
+  if [ "$COUNT" -gt 1 ]; then
+    echo "  WARNUNG: unqualified-search-registries ist $COUNT mal in $REGISTRIES_CONF vorhanden — bitte manuell bereinigen."
+  fi
 fi
 
 # --- Rootless Storage (fuse-overlayfs) ---
@@ -77,7 +103,7 @@ else
   echo "  Containers-Konfiguration wird erstellt"
   mkdir -p "$(dirname "$CONTAINERS_CONF")"
   # pasta ist ab Podman 5+ der Standard, Fallback auf slirp4netns
-  if podman info --format '{{.Host.Pasta.Executable}}' &>/dev/null 2>&1; then
+  if podman info --format '{{.Host.Pasta.Executable}}' &>/dev/null; then
     NETWORK_BACKEND="pasta"
   else
     NETWORK_BACKEND="slirp4netns"
@@ -94,6 +120,12 @@ EOF
 fi
 
 # --- Podman-Socket für Docker-Kompatibilität ---
+# XDG_RUNTIME_DIR muss gesetzt sein (relevant für WSL ohne systemd)
+if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
+  export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+  echo "  HINWEIS: XDG_RUNTIME_DIR war nicht gesetzt, temporär auf $XDG_RUNTIME_DIR gesetzt."
+fi
+
 if systemctl --user is-active podman.socket &>/dev/null; then
   echo "  Podman-Socket ist bereits aktiv -> übersprungen"
 else
