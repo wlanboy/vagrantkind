@@ -17,6 +17,9 @@ K9S_VERSION="0.50.18"
 # https://github.com/argoproj/argo-cd/releases
 ARGOCD_VERSION="v3.3.6"
 
+# https://github.com/metallb/metallb/releases
+METALLB_VERSION="0.15.3"
+
 # https://sdkman.io/ -> sdk list java / sdk list maven
 JAVA_VERSION="25-tem"
 MAVEN_VERSION="3.9.9"
