@@ -10,7 +10,7 @@ for cmd in helm kubectl; do
 done
 
 echo "Füge Argo Helm Repository hinzu..."
-helm repo add argo https://argoproj.github.io/argo-helm
+helm repo add argo https://argoproj.github.io/argo-helm 2>/dev/null || true
 helm repo update
 
 echo "Installiere ArgoCD..."
@@ -19,9 +19,6 @@ helm upgrade --install argocd argo/argo-cd \
     --create-namespace \
     -f argocd-values-istio.yaml \
     --wait
-
-echo "Warte auf ArgoCD Pods..."
-kubectl -n argocd wait --for=condition=Ready --all pods --timeout=120s
 
 echo "Erstelle ArgoCD Certificate..."
 kubectl apply -f - <<EOF
@@ -101,7 +98,7 @@ EOF
 
 echo ""
 echo "ArgoCD Admin-Passwort:"
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" 2>/dev/null | base64 -d || echo "(Secret nicht vorhanden - Passwort wurde bereits geändert oder gelöscht)"
 echo ""
 
 echo "ArgoCD Installation abgeschlossen."
