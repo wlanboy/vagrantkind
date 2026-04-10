@@ -36,7 +36,7 @@ if [ ! -d "$HOME/.sdkman" ]; then
 else
   echo "  sdkman ist bereits installiert -> übersprungen"
 fi
-source "$HOME/.sdkman/bin/sdkman-init.sh"
+[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 # --- Java (via sdkman) ---
 if sdk_need_install java "$JAVA_VERSION"; then
