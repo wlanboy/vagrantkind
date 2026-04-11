@@ -38,7 +38,7 @@ whiptail --title "Kubernetes Installer" --msgbox \
 Dieses Script richtet einen lokalen Kubernetes-Cluster ein und
 installiert optional weitere Komponenten:
 
-  • Cluster-Backend:  k3s  oder  kind (+ Docker)
+  • Cluster-Backend:  k3s  oder  kind (+ Docker) in Linux oder WSL
   • MetalLB          – LoadBalancer für bare-metal
   • cert-manager     – TLS-Zertifikatsverwaltung
   • Istio            – Service Mesh
