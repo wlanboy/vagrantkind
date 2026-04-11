@@ -56,6 +56,13 @@ spec:
     istio: ingressgateway
   servers:
   - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "argocd.tp.lan"
+    - "argocd.gmk.lan"
+  - port:
       number: 443
       name: https
       protocol: HTTPS
