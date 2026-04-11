@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: apicurio-cert-secret
+  namespace: istio-ingress
+spec:
+  secretName: apicurio-cert-secret
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  commonName: apicurio.tp.lan
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - apicurio.tp.lan
+    - apicurio.gmk.lan
+  issuerRef:
+    name: local-ca-issuer
+    kind: ClusterIssuer

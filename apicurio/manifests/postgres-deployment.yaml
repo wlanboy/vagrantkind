@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apicurio-db
+  namespace: apicurio
+  labels:
+    app: apicurio-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apicurio-db
+  template:
+    metadata:
+      labels:
+        app: apicurio-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: apicurio-db-secret
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: apicurio-db-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: apicurio-db-secret
+              key: POSTGRES_PASSWORD
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - apicurio
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - apicurio
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: apicurio-db-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+      volumes:
+      - name: apicurio-db-storage
+        persistentVolumeClaim:
+          claimName: apicurio-db-pvc
