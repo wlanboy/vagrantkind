@@ -7,3 +7,4 @@ mesh/grafana-configmap.yaml
 tool/__pycache__/
 tool/daten.json
 caddy/.env
+analytics/__pycache__/
