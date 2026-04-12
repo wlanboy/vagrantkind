@@ -1,0 +1,17 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-backup
+  namespace: velero
+spec:
+  # Täglich um 02:00 Uhr
+  schedule: "0 2 * * *"
+  template:
+    # Alle Namespaces sichern
+    includedNamespaces:
+      - "*"
+    storageLocation: default
+    # PVC-Inhalte via kopia (File-System-Backup) sichern
+    defaultVolumesToFsBackup: true
+    # Backups 7 Tage aufbewahren
+    ttl: 168h0m0s
