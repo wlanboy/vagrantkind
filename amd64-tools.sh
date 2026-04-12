@@ -58,6 +58,23 @@ if need_install hey ""; then
   sudo install -m 555 hey_linux_amd64 /usr/local/bin/hey
 fi
 
+# --- velero ---
+VELERO_WANT="${VELERO_VERSION#v}"
+if need_install velero "$VELERO_WANT"; then
+  curl -sSL "https://github.com/vmware-tanzu/velero/releases/download/${VELERO_VERSION}/velero-${VELERO_VERSION}-linux-amd64.tar.gz" \
+    -o velero.tar.gz
+  tar -xf velero.tar.gz
+  sudo install -m 555 "velero-${VELERO_VERSION}-linux-amd64/velero" /usr/local/bin/velero
+fi
+
+# --- s5cmd ---
+if need_install s5cmd "$S5CMD_VERSION"; then
+  curl -sSL "https://github.com/peak/s5cmd/releases/download/v${S5CMD_VERSION}/s5cmd_${S5CMD_VERSION}_Linux-64bit.tar.gz" \
+    -o s5cmd.tar.gz
+  tar -xf s5cmd.tar.gz s5cmd
+  sudo install -m 555 s5cmd /usr/local/bin/s5cmd
+fi
+
 # --- mirrord ---
 if ! command -v mirrord &>/dev/null; then
   echo "  mirrord ist nicht installiert -> wird installiert"

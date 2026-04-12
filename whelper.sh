@@ -19,6 +19,8 @@ installed_version() {
     mirrord)   mirrord --version 2>/dev/null | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' ;;
     uv)        uv --version 2>/dev/null | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' ;;
     code)      code --version 2>/dev/null | head -1 ;;
+    velero)    velero version --client-only 2>/dev/null | grep -oP 'v?\K[0-9]+\.[0-9]+\.[0-9]+' | head -1 ;;
+    s5cmd)     s5cmd --version 2>/dev/null | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' | head -1 ;;
     *)         echo "" ;;
   esac
 }

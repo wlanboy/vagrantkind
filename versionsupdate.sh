@@ -30,7 +30,7 @@ for arg in "$@"; do
       echo "  --commit            Versionen aktualisieren und git commit erstellen"
       echo "  --skip=helm,istio   Tools vom Update ausschließen"
       echo ""
-      echo "Verfügbare Tools: helm, kind, istio, k9s, argocd, metallb"
+      echo "Verfügbare Tools: helm, kind, istio, k9s, argocd, metallb, velero, velero-aws, s5cmd"
       exit 0
       ;;
   esac
@@ -141,6 +141,30 @@ if ! is_skipped metallb; then
   METALLB_LATEST=$(github_latest "metallb/metallb")
   update_version "METALLB_VERSION" "$METALLB_VERSION" "$METALLB_LATEST"
   COMMIT_LOG+="MetalLB (metallb/metallb):\n$LAST_VERSION_MSG\n"
+fi
+
+# --- Velero (behält v-Prefix) ---
+echo "Velero (vmware-tanzu/velero):"
+if ! is_skipped velero; then
+  VELERO_LATEST=$(github_latest_raw "vmware-tanzu/velero")
+  update_version "VELERO_VERSION" "$VELERO_VERSION" "$VELERO_LATEST"
+  COMMIT_LOG+="Velero (vmware-tanzu/velero):\n$LAST_VERSION_MSG\n"
+fi
+
+# --- Velero AWS Plugin (behält v-Prefix) ---
+echo "Velero AWS Plugin (vmware-tanzu/velero-plugin-for-aws):"
+if ! is_skipped velero-aws; then
+  VELERO_AWS_LATEST=$(github_latest_raw "vmware-tanzu/velero-plugin-for-aws")
+  update_version "VELERO_AWS_PLUGIN_VERSION" "$VELERO_AWS_PLUGIN_VERSION" "$VELERO_AWS_LATEST"
+  COMMIT_LOG+="Velero AWS Plugin (vmware-tanzu/velero-plugin-for-aws):\n$LAST_VERSION_MSG\n"
+fi
+
+# --- s5cmd ---
+echo "s5cmd (peak/s5cmd):"
+if ! is_skipped s5cmd; then
+  S5CMD_LATEST=$(github_latest "peak/s5cmd")
+  update_version "S5CMD_VERSION" "$S5CMD_VERSION" "$S5CMD_LATEST"
+  COMMIT_LOG+="s5cmd (peak/s5cmd):\n$LAST_VERSION_MSG\n"
 fi
 
 echo ""

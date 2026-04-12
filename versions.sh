@@ -23,3 +23,12 @@ METALLB_VERSION="0.15.3"
 # https://sdkman.io/ -> sdk list java / sdk list maven
 JAVA_VERSION="25-tem"
 MAVEN_VERSION="3.9.9"
+
+# https://github.com/vmware-tanzu/velero/releases
+VELERO_VERSION="v1.18.0"
+
+# https://github.com/vmware-tanzu/velero-plugin-for-aws/releases
+VELERO_AWS_PLUGIN_VERSION="v1.14.0"
+
+# https://github.com/peak/s5cmd/releases
+S5CMD_VERSION="2.3.0"
