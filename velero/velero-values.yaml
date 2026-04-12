@@ -1,0 +1,35 @@
+configuration:
+  backupStorageLocation:
+    - name: default
+      provider: aws
+      bucket: velero  # wird per --set gesetzt (GARAGE_BUCKET)
+      credential:
+        name: velero-credentials
+        key: cloud
+      config:
+        region: garage  # wird per --set gesetzt (GARAGE_REGION)
+        s3ForcePathStyle: "true"
+        # s3Url: wird per --set gesetzt (GARAGE_ENDPOINT)
+
+  # Kein VolumeSnapshotLocation - wir nutzen File-System-Backup (kopia)
+
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.10.1
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+credentials:
+  useSecret: true
+  existingSecret: velero-credentials
+
+# Keine CSI-Snapshots, stattdessen kopia File-System-Backup
+snapshotsEnabled: false
+
+# NodeAgent (kopia) für PVC-Backup auf jedem Node deployen
+deployNodeAgent: true
+
+nodeAgent:
+  podVolumePath: /var/lib/kubelet/pods
