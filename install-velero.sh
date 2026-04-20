@@ -39,7 +39,7 @@ fi
 
 # --- Namespace ---
 echo "📁 Erstelle Velero Namespace..."
-kubectl apply -f manifests/velero/namespace.yaml
+kubectl apply -f velero/namespace.yaml
 
 # --- Credentials Secret ---
 echo "🔑 Erstelle Garage Credentials Secret..."
@@ -56,7 +56,7 @@ helm repo update velero
 
 echo "🚀 Installiere/Aktualisiere Velero..."
 helm upgrade --install velero velero/velero \
-  -f manifests/velero/velero-values.yaml \
+  -f velero/velero-values.yaml \
   --set configuration.backupStorageLocation[0].config.s3Url="${GARAGE_ENDPOINT}" \
   --set configuration.backupStorageLocation[0].config.region="${GARAGE_REGION}" \
   --set configuration.backupStorageLocation[0].bucket="${GARAGE_BUCKET}" \
@@ -72,7 +72,7 @@ kubectl wait --namespace velero \
 # --- Backup Schedule ---
 SCHEDULE_NAME="daily-backup"
 echo "📅 Erstelle/Aktualisiere täglichen Backup-Schedule..."
-kubectl apply -f manifests/velero/schedule.yaml
+kubectl apply -f velero/schedule.yaml
 echo "✅ Backup-Schedule '${SCHEDULE_NAME}' angelegt."
 
 echo ""
