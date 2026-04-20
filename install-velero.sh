@@ -63,11 +63,8 @@ helm upgrade --install velero velero/velero \
   --set initContainers[0].image="velero/velero-plugin-for-aws:${VELERO_AWS_PLUGIN_VERSION}" \
   -n velero
 
-echo "⏳ Warte auf Velero Pods..."
-kubectl wait --namespace velero \
-  --for=condition=Ready pod \
-  --selector=app.kubernetes.io/name=velero \
-  --timeout=180s
+echo "⏳ Warte auf Velero Deployment..."
+kubectl rollout status deployment/velero -n velero --timeout=180s
 
 # --- Backup Schedule ---
 SCHEDULE_NAME="daily-backup"
