@@ -13,6 +13,10 @@ configuration:
 
   # Kein VolumeSnapshotLocation - wir nutzen File-System-Backup (kopia)
 
+  # Maintenance-Jobs (kopia Repository-Pflege) nach 1h automatisch löschen
+  maintenanceJobConfig:
+    jobTTL: 1h0m0s
+
 initContainers:
   - name: velero-plugin-for-aws
     image: velero/velero-plugin-for-aws:v1.10.1
