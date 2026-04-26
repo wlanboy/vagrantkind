@@ -20,7 +20,7 @@ ACCESS_KEY=$(echo "${KEY_INFO}" | grep "Key ID" | awk '{print $NF}')
 SECRET_KEY=$(echo "${KEY_INFO}" | grep "Secret key" | awk '{print $NF}')
 
 # Bucket (ersten nehmen)
-BUCKET=$(docker exec "${GARAGE_CONTAINER}" /garage bucket list 2>/dev/null | awk 'NR==2 {print $1}')
+BUCKET=$(docker exec "${GARAGE_CONTAINER}" /garage bucket list 2>/dev/null | awk 'NR==2 {print $3}')
 
 # Region aus garage.toml (via docker cp, kein Shell im Container nötig)
 REGION=$(docker cp "${GARAGE_CONTAINER}:/etc/garage.toml" - 2>/dev/null | tar -xO 2>/dev/null | grep 's3_region' | head -1 | tr -d '" ' | cut -d= -f2)
