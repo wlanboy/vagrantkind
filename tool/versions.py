@@ -10,7 +10,8 @@ _VERSIONS_SH = Path(__file__).parent.parent / "versions.sh"
 
 def _load_versions() -> dict[str, str]:
     """Laedt Versionen aus versions.sh per bash -c 'source ... && echo VAR=...'."""
-    keys = ["HELM_VERSION", "KIND_VERSION", "ISTIO_VERSION", "K9S_VERSION", "ARGOCD_VERSION"]
+    keys = ["HELM_VERSION", "KIND_VERSION", "ISTIO_VERSION", "K9S_VERSION", "ARGOCD_VERSION",
+            "METALLB_VERSION", "VELERO_VERSION", "S5CMD_VERSION"]
     script = f'source {_VERSIONS_SH}; ' + '; '.join(f'echo {k}="${{{k}}}"' for k in keys)
     result = subprocess.run(
         ["bash", "-c", script],
@@ -33,6 +34,9 @@ KIND_VERSION = _v["KIND_VERSION"]
 ISTIO_VERSION = _v["ISTIO_VERSION"]
 K9S_VERSION = _v["K9S_VERSION"]
 ARGOCD_VERSION = _v["ARGOCD_VERSION"]
+METALLB_VERSION = _v["METALLB_VERSION"]
+VELERO_VERSION = _v["VELERO_VERSION"]
+S5CMD_VERSION = _v["S5CMD_VERSION"]
 
 DEFAULT_IP_LINUX = "172.18.100.10"
 DEFAULT_IP_WSL = "172.18.0.10"
