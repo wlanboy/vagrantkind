@@ -2,7 +2,6 @@
 
 import sys
 
-from addon_demoservice import deploy_demo_service
 from helpers import (
     ask_yes_no,
     ensure_namespace,
@@ -26,8 +25,7 @@ def install_istio(hostname: str) -> None:
     if istio_running:
         print("Istio laeuft bereits (Helm Release 'istiod' gefunden).")
         if not ask_yes_no("  Trotzdem neu installieren/aktualisieren?", default=False):
-            print("  Ueberspringe Istio, fahre mit Demo-Service fort...\n")
-            deploy_demo_service(hostname)
+            print("  Ueberspringe Istio.\n")
             return
 
     print("Fuege Istio Helm Repository hinzu...")
@@ -57,7 +55,5 @@ def install_istio(hostname: str) -> None:
             "--wait",
         ]
     )
-
-    deploy_demo_service(hostname)
 
     print("\nIstio Installation abgeschlossen.")
