@@ -77,7 +77,26 @@ else
   fi
 fi
 
-# ── 5. Aktuelle Backups prüfen ─────────────────────────────────────────────
+# ── 5. BackupRepository Status ─────────────────────────────────────────────
+section "BackupRepository Status (kopia)"
+REPOS=$(kubectl get backuprepositories -n velero \
+  -o jsonpath='{range .items[*]}{.metadata.name}={.status.phase}{"\n"}{end}' 2>/dev/null || true)
+if [ -z "${REPOS}" ]; then
+  warn "Keine BackupRepositories gefunden"
+else
+  while IFS='=' read -r name phase; do
+    if [ "${phase}" = "Ready" ]; then
+      ok "BackupRepository '${name}': ${phase}"
+    else
+      MSG=$(kubectl get backuprepository "${name}" -n velero \
+        -o jsonpath='{.status.message}' 2>/dev/null || true)
+      fail "BackupRepository '${name}': ${phase}${MSG:+ – ${MSG}}"
+      echo "     Fix: kubectl delete backuprepository ${name} -n velero"
+    fi
+  done <<< "${REPOS}"
+fi
+
+# ── 6. Aktuelle Backups prüfen ─────────────────────────────────────────────
 section "Backup Status (letzte 10)"
 BACKUPS=$(kubectl get backups -n velero \
   --sort-by='.metadata.creationTimestamp' \
@@ -130,7 +149,7 @@ else
   fi
 fi
 
-# ── 6. Letztes Backup nicht zu alt ─────────────────────────────────────────
+# ── 7. Letztes Backup nicht zu alt ─────────────────────────────────────────
 section "Aktualität des letzten Backups"
 LAST_COMPLETED=$(kubectl get backups -n velero \
   --sort-by='.metadata.creationTimestamp' \
@@ -152,7 +171,7 @@ else
   fi
 fi
 
-# ── 7. VolumeSnapshotLocation (optional) ───────────────────────────────────
+# ── 8. VolumeSnapshotLocation (optional) ───────────────────────────────────
 section "VolumeSnapshotLocation (optional)"
 VSL=$(kubectl get volumesnapshotlocation -n velero \
   -o jsonpath='{range .items[*]}{.metadata.name}={.status.phase}{"\n"}{end}' 2>/dev/null || true)
