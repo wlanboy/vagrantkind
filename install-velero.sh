@@ -27,15 +27,14 @@ S5="${S5CMD} --endpoint-url ${GARAGE_ENDPOINT}"
 
 VELERO="velero"
 
-# --- Garage Bucket prüfen / anlegen ---
+# --- Garage Bucket prüfen ---
 echo "🪣 Prüfe Garage Bucket '${GARAGE_BUCKET}'..."
 if ! ${S5} ls "s3://${GARAGE_BUCKET}" &>/dev/null; then
-  echo "📦 Erstelle Garage Bucket '${GARAGE_BUCKET}'..."
-  ${S5} mb "s3://${GARAGE_BUCKET}"
-  echo "✅ Bucket '${GARAGE_BUCKET}' erstellt."
-else
-  echo "✅ Bucket '${GARAGE_BUCKET}' bereits vorhanden."
+  echo "❌ Bucket '${GARAGE_BUCKET}' nicht erreichbar."
+  echo "   Bitte valero-config.sh auf dem Garage-Host ausführen."
+  exit 1
 fi
+echo "✅ Bucket '${GARAGE_BUCKET}' erreichbar."
 
 # --- Namespace ---
 echo "📁 Erstelle Velero Namespace..."
