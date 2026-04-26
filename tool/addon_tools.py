@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from helpers import ask_yes_no, run, step, tool_exists
@@ -14,6 +15,8 @@ from versions import (
     ISTIO_VERSION,
     K9S_VERSION,
     KIND_VERSION,
+    S5CMD_VERSION,
+    VELERO_VERSION,
 )
 
 
@@ -57,6 +60,10 @@ def _installed_version(cmd: str) -> str:
         )
     if cmd == "hey":
         return "installed"
+    if cmd == "velero":
+        return _grep(["velero", "version", "--client-only"], r"([0-9]+\.[0-9]+\.[0-9]+)")
+    if cmd == "s5cmd":
+        return _grep(["s5cmd", "version"], r"([0-9]+\.[0-9]+\.[0-9]+)")
     if cmd == "mirrord":
         return _grep(["mirrord", "--version"], r"([0-9]+\.[0-9]+\.[0-9]+)")
     return ""
@@ -188,8 +195,55 @@ def _install_mirrord() -> None:
     )
 
 
+def _install_velero() -> None:
+    version_tag = VELERO_VERSION if VELERO_VERSION.startswith("v") else f"v{VELERO_VERSION}"
+    tarball = f"velero-{version_tag}-linux-amd64.tar.gz"
+    run(
+        [
+            "curl",
+            "-sSL",
+            f"https://github.com/vmware-tanzu/velero/releases/download/{version_tag}/{tarball}",
+            "-o",
+            "velero.tar.gz",
+        ]
+    )
+    run(["tar", "-xf", "velero.tar.gz"])
+    run(
+        [
+            "sudo",
+            "install",
+            "-m",
+            "555",
+            f"velero-{version_tag}-linux-amd64/velero",
+            "/usr/local/bin/velero",
+        ]
+    )
+    os.remove("velero.tar.gz")
+    shutil.rmtree(f"velero-{version_tag}-linux-amd64", ignore_errors=True)
+
+
+def _install_s5cmd() -> None:
+    tarball = f"s5cmd_{S5CMD_VERSION}_Linux-64bit.tar.gz"
+    run(
+        [
+            "curl",
+            "-sSL",
+            f"https://github.com/peak/s5cmd/releases/download/v{S5CMD_VERSION}/{tarball}",
+            "-o",
+            "s5cmd.tar.gz",
+        ]
+    )
+    run(["tar", "-xf", "s5cmd.tar.gz", "s5cmd"])
+    run(["sudo", "install", "-m", "555", "s5cmd", "/usr/local/bin/s5cmd"])
+    os.remove("s5cmd.tar.gz")
+    try:
+        os.remove("s5cmd")
+    except FileNotFoundError:
+        pass
+
+
 # (cmd, gewuenschte Version fuer Vergleich)
-_TOOLS: dict[str, tuple[str, callable]] = {
+_TOOLS: dict[str, tuple[str, Callable[[], None]]] = {
     "kubectl":  ("",              _install_kubectl),
     "helm":     (HELM_VERSION,    _install_helm),
     "kind":     (KIND_VERSION,    _install_kind),
@@ -197,6 +251,8 @@ _TOOLS: dict[str, tuple[str, callable]] = {
     "k9s":      (K9S_VERSION,     _install_k9s),
     "argocd":   (ARGOCD_VERSION,  _install_argocd_cli),
     "hey":      ("",              _install_hey),
+    "velero":   (VELERO_VERSION,  _install_velero),
+    "s5cmd":    (S5CMD_VERSION,   _install_s5cmd),
     "mirrord":  ("",              _install_mirrord),
 }
 
