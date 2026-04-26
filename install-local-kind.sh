@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-METALLB_VERSION="0.15.2"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/versions.sh"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Prüfen ob benötigte Tools vorhanden sind
