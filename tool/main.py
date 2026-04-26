@@ -8,6 +8,7 @@ from pathlib import Path
 
 from addon_argocd import get_argocd_password, install_argocd
 from addon_certmanager import install_certmanager
+from addon_demoservice import deploy_demo_service
 from addon_istio import install_istio
 from addon_localca import create_ca
 from addon_metallb import create_kind_cluster
@@ -104,7 +105,7 @@ def main() -> None:
 
     ca_dir = Path.home() / "local-ca"
 
-    print(f"\nKonfiguration:")
+    print("\nKonfiguration:")
     print(f"  Umgebung:  {env_input}")
     print(f"  Hostname:  {hostname}")
     print(f"  DNS-IP:    {ip}")
@@ -134,6 +135,7 @@ def main() -> None:
         install_certmanager(ca_dir)
         install_argocd(hostname)
         install_dns_records(hostname, ip)
+        deploy_demo_service(hostname)
     except (subprocess.CalledProcessError, KeyboardInterrupt) as exc:
         if isinstance(exc, KeyboardInterrupt):
             print("\n\nAbgebrochen durch Benutzer.")
