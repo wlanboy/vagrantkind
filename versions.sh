@@ -9,13 +9,13 @@ HELM_VERSION="4.1.4"
 KIND_VERSION="0.31.0"
 
 # https://github.com/istio/istio/releases/
-ISTIO_VERSION="1.29.1"
+ISTIO_VERSION="1.29.2"
 
 # https://github.com/derailed/k9s/releases
 K9S_VERSION="0.50.18"
 
 # https://github.com/argoproj/argo-cd/releases
-ARGOCD_VERSION="v3.3.6"
+ARGOCD_VERSION="v3.3.9"
 
 # https://github.com/metallb/metallb/releases
 METALLB_VERSION="0.15.3"
